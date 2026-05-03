@@ -63,7 +63,6 @@ export default function SiteFooter() {
           <div className="flex gap-4">
             <Link href="/privacybeleid" className="hover:text-gray-300 transition-colors">Privacy</Link>
             <Link href="/algemene-voorwaarden" className="hover:text-gray-300 transition-colors">Voorwaarden</Link>
-            <Link href="/admin" className="hover:text-gray-300 transition-colors">Admin</Link>
           </div>
         </div>
       </div>

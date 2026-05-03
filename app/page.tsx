@@ -1,5 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
+import { existsSync } from "fs";
+import { join } from "path";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import { CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_COLOR, CATEGORIES, CATEGORY_SLUG } from "@/lib/categories";
@@ -19,6 +22,22 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
+
+const CATEGORY_IMAGE: Record<Category, string> = {
+  baby_0_3:  "/images/pakketten/baby-0-3-jaar.png",
+  boys_3_5:  "/images/pakketten/jongens-3-5-jaar.png",
+  boys_6_8:  "/images/pakketten/jongens-6-8-jaar.png",
+  girls_3_5: "/images/pakketten/meisjes-3-5-jaar.png",
+  girls_6_8: "/images/pakketten/meisjes-6-8-jaar.png",
+};
+
+function imageExists(src: string) {
+  try {
+    return existsSync(join(process.cwd(), "public", src));
+  } catch {
+    return false;
+  }
+}
 
 const CATEGORY_DESCRIPTIONS: Record<Category, string> = {
   baby_0_3: "Zachte en kleurrijke speeltjes voor de allerkleinsten",
@@ -95,38 +114,57 @@ export default function HomePage() {
           <p className="text-sm text-gray-400">Welke leeftijd past het beste?</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {CATEGORIES.map((cat) => (
-            <Link
-              key={cat}
-              href={`/bestellen/${CATEGORY_SLUG[cat]}`}
-              className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 block"
-            >
-              {/* Colored top bar */}
-              <div className="h-2 w-full" style={{ background: CATEGORY_COLOR[cat] }} />
-              <div className="p-5 sm:p-6">
-                <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4"
-                  style={{ background: CATEGORY_COLOR[cat] + "25" }}
-                >
-                  {CATEGORY_EMOJI[cat]}
-                </div>
-                <h3 className="font-black text-gray-800 text-lg mb-1">{CATEGORY_LABELS[cat]}</h3>
-                <p className="text-sm text-gray-400 mb-5 leading-relaxed">{CATEGORY_DESCRIPTIONS[cat]}</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-2xl font-black" style={{ color: "#9B91BE" }}>€34,95</div>
-                    <div className="text-xs text-green-600 font-semibold mt-0.5">🏷️ Beste prijs</div>
+          {CATEGORIES.map((cat) => {
+            const imgSrc = CATEGORY_IMAGE[cat];
+            const hasImage = imageExists(imgSrc);
+            return (
+              <Link
+                key={cat}
+                href={`/bestellen/${CATEGORY_SLUG[cat]}`}
+                className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 block"
+              >
+                {hasImage ? (
+                  <div className="relative w-full h-44 overflow-hidden">
+                    <Image
+                      src={imgSrc}
+                      alt={CATEGORY_LABELS[cat]}
+                      fill
+                      className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                    <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 50%, white 100%)` }} />
                   </div>
-                  <span
-                    className="text-sm font-black px-5 py-2.5 rounded-xl text-white group-hover:opacity-90 transition-opacity"
-                    style={{ background: CATEGORY_COLOR[cat] }}
-                  >
-                    Bestel →
-                  </span>
+                ) : (
+                  <div className="h-2 w-full" style={{ background: CATEGORY_COLOR[cat] }} />
+                )}
+
+                <div className="p-5 sm:p-6">
+                  {!hasImage && (
+                    <div
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4"
+                      style={{ background: CATEGORY_COLOR[cat] + "25" }}
+                    >
+                      {CATEGORY_EMOJI[cat]}
+                    </div>
+                  )}
+                  <h3 className="font-black text-gray-800 text-lg mb-1">{CATEGORY_LABELS[cat]}</h3>
+                  <p className="text-sm text-gray-400 mb-5 leading-relaxed">{CATEGORY_DESCRIPTIONS[cat]}</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-black" style={{ color: "#9B91BE" }}>€34,95</div>
+                      <div className="text-xs text-green-600 font-semibold mt-0.5">🏷️ Beste prijs</div>
+                    </div>
+                    <span
+                      className="text-sm font-black px-5 py-2.5 rounded-xl text-white group-hover:opacity-90 transition-opacity"
+                      style={{ background: CATEGORY_COLOR[cat] }}
+                    >
+                      Bestel →
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       </section>
 
