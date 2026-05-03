@@ -13,27 +13,27 @@ const categories = [
   {
     filename: "baby-0-3-jaar.png",
     prompt:
-      "A cute smiling baby (around 1 year old) sitting on a soft play mat, happily playing with colorful soft toys and rattles. Warm pastel colors, soft lighting, photorealistic style, cheerful and inviting, white background with subtle pastel elements.",
+      "Wide landscape photo of an adorable smiling baby (around 1 year old) centered in frame, sitting upright on a soft pastel play mat, both hands holding and playing with colorful soft rattles and plush toys that are clearly visible. Baby's full face and upper body visible. Bright natural light, pastel nursery background, photorealistic, warm and cheerful atmosphere.",
   },
   {
     filename: "jongens-3-5-jaar.png",
     prompt:
-      "A happy energetic boy around 4 years old, playing with toy cars and building blocks on the floor, big smile, wearing casual clothes. Bright cheerful colors, photorealistic style, warm inviting lighting, white or light background.",
+      "Wide landscape photo of a happy smiling boy around 4 years old, centered in frame from waist up, actively pushing colorful toy cars and holding building blocks that are clearly visible in his hands. Full face visible with big smile, wearing a casual t-shirt. Bright playroom background, photorealistic, warm cheerful lighting.",
   },
   {
     filename: "jongens-6-8-jaar.png",
     prompt:
-      "A cool boy around 7 years old, enthusiastically playing with an adventure action figure set or Lego construction set, excited expression, wearing casual clothes. Dynamic composition, bright colors, photorealistic style, light background.",
+      "Wide landscape photo of an excited boy around 7 years old, centered in frame from waist up, holding up and playing with a Lego set or action figures that are clearly visible and prominent in the image. Full face visible with enthusiastic expression, wearing a casual hoodie. Bright playroom background, photorealistic, dynamic and energetic mood.",
   },
   {
     filename: "meisjes-3-5-jaar.png",
     prompt:
-      "A sweet girl around 4 years old, playing with colorful creative toys like building blocks or a toy kitchen, big happy smile, wearing a cute outfit. Bright pink and purple tones, photorealistic style, warm soft lighting, light background.",
+      "Wide landscape photo of a cheerful smiling girl around 4 years old, centered in frame from waist up, actively playing with colorful stacking toys or a toy kitchen set that are clearly visible in her hands. Full face visible with big happy smile, wearing a cute pink dress. Bright soft playroom background with pastel colors, photorealistic, warm inviting atmosphere.",
   },
   {
     filename: "meisjes-6-8-jaar.png",
     prompt:
-      "A stylish girl around 7 years old, happily playing with creative arts and crafts toys or a jewelry making kit, smiling and engaged, wearing a trendy casual outfit. Soft purple and pink tones, photorealistic style, bright warm lighting, light background.",
+      "Wide landscape photo of a stylish smiling girl around 7 years old, centered in frame from waist up, engaged in creative play with an arts and crafts kit or jewelry making set clearly visible in her hands in front of her. Full face visible with a joyful expression, wearing a trendy casual outfit. Soft purple and pink background tones, photorealistic, bright warm lighting.",
   },
 ];
 
