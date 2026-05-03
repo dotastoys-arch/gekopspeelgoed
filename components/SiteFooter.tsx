@@ -36,6 +36,7 @@ export default function SiteFooter() {
           <div>
             <h3 className="font-black text-sm text-gray-300 mb-4 uppercase tracking-wider">Informatie</h3>
             <ul className="space-y-2 text-sm text-gray-400">
+              <li><Link href="/mijn-account" className="hover:text-white transition-colors">Mijn account</Link></li>
               <li><Link href="/over-ons" className="hover:text-white transition-colors">Over ons</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
               <li><Link href="/retourbeleid" className="hover:text-white transition-colors">Retourbeleid</Link></li>
