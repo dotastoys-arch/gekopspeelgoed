@@ -9,8 +9,14 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Gek op Speelgoed",
-  description: "Verrassende speelgoedpakketten voor ieder kind",
+  title: {
+    default: "GEK OP SPEELGOED — Verrassende Speelgoedpakketten voor Kinderen",
+    template: "%s | GEK OP SPEELGOED",
+  },
+  description: "Verrassende speelgoedpakketten voor €34,95. 5–6 uniek uitgekozen speeltjes voor baby's en kinderen tot 8 jaar. Goedkoper dan de winkel!",
+  metadataBase: new URL("https://gekopspeelgoed.nl"),
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

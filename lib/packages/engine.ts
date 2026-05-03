@@ -174,13 +174,12 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
-function greedyFill(
-  pool: Array<{ id: number; purchasePriceExcl: number; [key: string]: unknown }>,
-  alreadySelected: typeof pool,
+function greedyFill<T extends { id: number; purchasePriceExcl: number }>(
+  pool: T[],
   slotsLeft: number,
   budget: number
-): typeof pool {
-  const result: typeof pool = [];
+): T[] {
+  const result: T[] = [];
   let remaining = budget;
   for (const item of pool) {
     if (result.length >= slotsLeft) break;
@@ -220,7 +219,7 @@ function selectItems(
         if (twoExpCost > maxBudget) continue;
 
         const budgetLeft = maxBudget - twoExpCost;
-        const cheapFill = greedyFill(cheapPool.filter((p) => p.id !== exp.id && p.id !== exp2.id), [], cheapCount, budgetLeft);
+        const cheapFill = greedyFill(cheapPool.filter((p) => p.id !== exp.id && p.id !== exp2.id), cheapCount, budgetLeft);
 
         if (cheapFill.length === cheapCount) {
           return [exp, exp2, ...cheapFill];

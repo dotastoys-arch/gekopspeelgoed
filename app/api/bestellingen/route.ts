@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { customers, orders, orderItems } from "@/lib/db/schema";
+import { customers, orders, orderItems, abandonedCarts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { generatePackage } from "@/lib/packages/engine";
 import type { Category } from "@/lib/db/schema";
@@ -9,7 +9,7 @@ import createMollieClient from "@mollie/api-client";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const { category, name, email, address, postalCode, city, giftProductId } = await req.json();
+  const { category, name, email, address, postalCode, city, giftProductId, discountToken } = await req.json();
 
   if (!category || !name || !email || !address || !postalCode || !city) {
     return NextResponse.json({ error: "Vul alle verplichte velden in" }, { status: 400 });
@@ -29,6 +29,17 @@ export async function POST(req: NextRequest) {
     await db.update(customers).set({ name, address, postalCode, city }).where(eq(customers.id, customer.id));
   }
 
+  // Validate discount token
+  let discountPct = 0;
+  let abandonedCartId: number | null = null;
+  if (discountToken) {
+    const cart = await db.query.abandonedCarts.findFirst({ where: eq(abandonedCarts.token, discountToken) });
+    if (cart && !cart.completedAt) {
+      discountPct = 10;
+      abandonedCartId = cart.id;
+    }
+  }
+
   // Generate package (takes customer history into account)
   const pkg = await generatePackage(category as Category, customer.id);
 
@@ -36,13 +47,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: pkg.reason ?? "Er kunnen momenteel geen pakketten samengesteld worden" }, { status: 422 });
   }
 
+  const finalPriceIncl = discountPct > 0
+    ? Math.round(pkg.sellingPriceIncl * (1 - discountPct / 100) * 100) / 100
+    : pkg.sellingPriceIncl;
+  const finalProfit = pkg.contribution - pkg.totalPurchaseExcl - (pkg.sellingPriceIncl - finalPriceIncl);
+
   // Save order (status: pending_payment until Mollie confirms payment)
   const [order] = await db.insert(orders).values({
     customerId: customer.id,
     category: category as Category,
-    sellingPriceIncl: pkg.sellingPriceIncl,
+    sellingPriceIncl: finalPriceIncl,
     totalPurchaseExcl: pkg.totalPurchaseExcl,
-    profit: pkg.profit,
+    profit: finalProfit,
     status: "pending_payment",
     giftProductId: giftProductId ?? null,
   }).returning();
@@ -60,8 +76,13 @@ export async function POST(req: NextRequest) {
   const mollie = createMollieClient({ apiKey: process.env.MOLLIE_API_KEY! });
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://gekopspeelgoed.nl";
 
+  // Mark abandoned cart as completed
+  if (abandonedCartId) {
+    await db.update(abandonedCarts).set({ completedAt: new Date() }).where(eq(abandonedCarts.id, abandonedCartId));
+  }
+
   const payment = await mollie.payments.create({
-    amount: { currency: "EUR", value: pkg.sellingPriceIncl.toFixed(2) },
+    amount: { currency: "EUR", value: finalPriceIncl.toFixed(2) },
     description: `Gek op Speelgoed pakket #${order.id}`,
     redirectUrl: `${baseUrl}/bestelling-bevestigd?orderId=${order.id}`,
     webhookUrl: `${baseUrl}/api/mollie/webhook`,

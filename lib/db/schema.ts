@@ -101,6 +101,22 @@ export const orderItems = gos.table("order_items", {
   purchasePriceExcl: doublePrecision("purchase_price_excl").notNull(),
 });
 
+export const abandonedCarts = gos.table("abandoned_carts", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  email: text("email").notNull(),
+  name: text("name").notNull(),
+  address: text("address"),
+  postalCode: text("postal_code"),
+  city: text("city"),
+  category: text("category", {
+    enum: ["baby_0_3", "boys_3_5", "boys_6_8", "girls_3_5", "girls_6_8"],
+  }).notNull(),
+  emailSentAt: timestamp("email_sent_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type Product = typeof products.$inferSelect;
 export type GiftProduct = Pick<Product, "id" | "name" | "imageUrl">;
 export type NewProduct = typeof products.$inferInsert;
