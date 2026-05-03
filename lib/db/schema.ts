@@ -72,6 +72,7 @@ export const customers = gos.table("customers", {
   postalCode: text("postal_code"),
   city: text("city"),
   country: text("country").notNull().default("NL"),
+  passwordHash: text("password_hash"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
