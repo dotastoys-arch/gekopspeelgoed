@@ -16,14 +16,14 @@ export default function BestelPage({ params }: { params: Promise<{ categorie: Ca
   const [cat, setCat] = useState<Category | null>(null);
   const [step, setStep] = useState<"form" | "cadeau">("form");
   const [form, setForm] = useState({ name: "", email: "", address: "", postalCode: "", city: "" });
-  const [gifts, setGifts] = useState<GiftProduct[]>([]);
+  const [gifts, setGifts] = useState<GiftProduct[] | null>(null); // null = loading
   const [selectedGift, setSelectedGift] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     params.then((p) => setCat(p.categorie));
-    fetch("/api/cadeaus").then((r) => r.json()).then(setGifts).catch(() => {});
+    fetch("/api/cadeaus").then((r) => r.json()).then(setGifts).catch(() => setGifts([]));
   }, [params]);
 
   if (!cat) return null;
@@ -34,11 +34,7 @@ export default function BestelPage({ params }: { params: Promise<{ categorie: Ca
 
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (gifts.length > 0) {
-      setStep("cadeau");
-    } else {
-      submitOrder(null);
-    }
+    setStep("cadeau");
   }
 
   async function submitOrder(giftProductId: number | null) {
@@ -103,9 +99,8 @@ export default function BestelPage({ params }: { params: Promise<{ categorie: Ca
           </div>
         </div>
 
-        {/* Step indicator (only when gifts available) */}
-        {gifts.length > 0 && (
-          <div className="flex items-center gap-2 mb-8">
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 mb-8">
             <div className="flex items-center gap-2">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white"
@@ -133,7 +128,6 @@ export default function BestelPage({ params }: { params: Promise<{ categorie: Ca
               <span className="text-sm font-semibold text-gray-400">Betalen</span>
             </div>
           </div>
-        )}
 
         {/* STEP 1: Form */}
         {step === "form" && (
@@ -179,7 +173,7 @@ export default function BestelPage({ params }: { params: Promise<{ categorie: Ca
                   className="w-full py-4 rounded-2xl font-black text-white text-lg transition-opacity"
                   style={{ background: "#9B91BE" }}
                 >
-                  {gifts.length > 0 ? "Volgende: kies je cadeau →" : "🎁 Bestel nu — €34,95"}
+                  Volgende: kies je cadeau →
                 </button>
                 <p className="text-xs text-center text-gray-400 mt-3">
                   Je betaalt veilig via Mollie. Na betaling ontvang je een bevestiging per e-mail.
@@ -212,7 +206,13 @@ export default function BestelPage({ params }: { params: Promise<{ categorie: Ca
                 <div className="text-xs text-gray-400">Verrassing volledig</div>
               </button>
 
-              {gifts.map((gift) => (
+              {gifts === null && (
+                <div className="col-span-2 flex items-center justify-center py-4 text-sm text-gray-400">
+                  Laden…
+                </div>
+              )}
+
+              {(gifts ?? []).map((gift) => (
                 <button
                   key={gift.id}
                   onClick={() => setSelectedGift(gift.id)}
@@ -245,7 +245,7 @@ export default function BestelPage({ params }: { params: Promise<{ categorie: Ca
               </div>
               {selectedGift !== null && (
                 <div className="flex items-center justify-between mb-4 text-sm" style={{ color: "#4DC97E" }}>
-                  <span className="font-semibold">🎁 {gifts.find(g => g.id === selectedGift)?.name}</span>
+                  <span className="font-semibold">🎁 {(gifts ?? []).find(g => g.id === selectedGift)?.name}</span>
                   <span className="font-bold">GRATIS</span>
                 </div>
               )}
