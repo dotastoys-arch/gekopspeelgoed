@@ -9,7 +9,7 @@ import createMollieClient from "@mollie/api-client";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const { category, name, email, address, postalCode, city } = await req.json();
+  const { category, name, email, address, postalCode, city, giftProductId } = await req.json();
 
   if (!category || !name || !email || !address || !postalCode || !city) {
     return NextResponse.json({ error: "Vul alle verplichte velden in" }, { status: 400 });
@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
     totalPurchaseExcl: pkg.totalPurchaseExcl,
     profit: pkg.profit,
     status: "pending_payment",
+    giftProductId: giftProductId ?? null,
   }).returning();
 
   await db.insert(orderItems).values(

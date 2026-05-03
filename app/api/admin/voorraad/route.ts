@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
       ageMin: products.ageMin,
       ageMax: products.ageMax,
       isActive: products.isActive,
+      isGift: products.isGift,
       quantity: inventory.quantity,
       inventoryId: inventory.id,
     })
@@ -34,18 +35,19 @@ export async function PATCH(req: NextRequest) {
   const session = await getSession();
   if (!session.isAdmin) return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 });
 
-  const { productId, quantity, gender, ageMin, ageMax, isActive } = await req.json();
+  const { productId, quantity, gender, ageMin, ageMax, isActive, isGift } = await req.json();
 
   if (quantity !== undefined) {
     await db.update(inventory).set({ quantity, updatedAt: new Date() })
       .where(eq(inventory.productId, productId));
   }
-  if (gender !== undefined || ageMin !== undefined || ageMax !== undefined || isActive !== undefined) {
+  if (gender !== undefined || ageMin !== undefined || ageMax !== undefined || isActive !== undefined || isGift !== undefined) {
     const updateData: Record<string, unknown> = {};
     if (gender !== undefined) updateData.gender = gender;
     if (ageMin !== undefined) updateData.ageMin = ageMin;
     if (ageMax !== undefined) updateData.ageMax = ageMax;
     if (isActive !== undefined) updateData.isActive = isActive;
+    if (isGift !== undefined) updateData.isGift = isGift;
     await db.update(products).set(updateData).where(eq(products.id, productId));
   }
 

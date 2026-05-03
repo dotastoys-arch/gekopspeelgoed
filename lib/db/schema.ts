@@ -14,6 +14,7 @@ export const products = gos.table("products", {
   ageMax: integer("age_max").notNull().default(8),
   imageUrl: text("image_url"),
   isActive: boolean("is_active").notNull().default(true),
+  isGift: boolean("is_gift").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -86,6 +87,7 @@ export const orders = gos.table("orders", {
     enum: ["pending_payment", "pending", "packed", "shipped", "delivered", "cancelled"],
   }).notNull().default("pending_payment"),
   molliePaymentId: text("mollie_payment_id"),
+  giftProductId: integer("gift_product_id").references(() => products.id),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -99,6 +101,7 @@ export const orderItems = gos.table("order_items", {
 });
 
 export type Product = typeof products.$inferSelect;
+export type GiftProduct = Pick<Product, "id" | "name" | "imageUrl">;
 export type NewProduct = typeof products.$inferInsert;
 export type Inventory = typeof inventory.$inferSelect;
 export type Invoice = typeof invoices.$inferSelect;

@@ -12,6 +12,7 @@ interface ProductRow {
   ageMin: number;
   ageMax: number;
   isActive: boolean;
+  isGift: boolean;
   quantity: number;
   inventoryId: number;
 }
@@ -31,6 +32,7 @@ function euroFmt(n: number) {
 export default function VoorraadPage() {
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"regulier" | "cadeaus">("regulier");
   const [filter, setFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState<Gender | "all">("all");
   const [saving, setSaving] = useState<number | null>(null);
@@ -53,33 +55,48 @@ export default function VoorraadPage() {
         ageMin: row.ageMin,
         ageMax: row.ageMax,
         isActive: row.isActive,
+        isGift: row.isGift,
       }),
     });
     setSaving(null);
+  }
+
+  async function toggleGift(row: ProductRow) {
+    const updated = { ...row, isGift: !row.isGift };
+    setRows((prev) => prev.map((r) => (r.id === row.id ? updated : r)));
+    await fetch("/api/admin/voorraad", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: row.id, isGift: updated.isGift }),
+    });
   }
 
   function update(id: number, field: keyof ProductRow, value: unknown) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
   }
 
-  const filtered = rows.filter((r) => {
+  const regulierRows = rows.filter((r) => !r.isGift);
+  const cadeauRows = rows.filter((r) => r.isGift);
+
+  const activeRows = tab === "cadeaus" ? cadeauRows : regulierRows;
+  const filtered = activeRows.filter((r) => {
     const textMatch = r.name.toLowerCase().includes(filter.toLowerCase()) || (r.ean ?? "").includes(filter);
     const genderMatch = genderFilter === "all" || r.gender === genderFilter;
     return textMatch && genderMatch;
   });
 
-  const lowStock = rows.filter((r) => r.quantity > 0 && r.quantity < 5).length;
-  const outOfStock = rows.filter((r) => r.quantity === 0 && r.isActive).length;
+  const lowStock = regulierRows.filter((r) => r.quantity > 0 && r.quantity < 5).length;
+  const outOfStock = regulierRows.filter((r) => r.quantity === 0 && r.isActive).length;
 
   if (loading) return <div className="p-8 text-gray-400">Laden…</div>;
 
   return (
     <div className="p-8">
       <h1 className="text-2xl font-black mb-1" style={{ color: "#9B91BE" }}>Voorraad</h1>
-      <p className="text-gray-400 text-sm mb-6">Beheer je producten en voorraadhoeveelheden</p>
+      <p className="text-gray-400 text-sm mb-6">Beheer producten en voorraadhoeveelheden</p>
 
       {/* Alerts */}
-      {(lowStock > 0 || outOfStock > 0) && (
+      {tab === "regulier" && (lowStock > 0 || outOfStock > 0) && (
         <div className="flex gap-3 mb-6">
           {lowStock > 0 && (
             <div className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: "#FEF3C7", color: "#92400E" }}>
@@ -91,6 +108,36 @@ export default function VoorraadPage() {
               🔴 {outOfStock} product{outOfStock > 1 ? "en" : ""} uitverkocht
             </div>
           )}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setTab("regulier")}
+          className="px-5 py-2 rounded-xl text-sm font-bold transition-all"
+          style={tab === "regulier"
+            ? { background: "#9B91BE", color: "#fff" }
+            : { background: "#F3F4F6", color: "#6B7280" }}
+        >
+          📦 Reguliere producten
+          <span className="ml-2 text-xs opacity-70">({regulierRows.length})</span>
+        </button>
+        <button
+          onClick={() => setTab("cadeaus")}
+          className="px-5 py-2 rounded-xl text-sm font-bold transition-all"
+          style={tab === "cadeaus"
+            ? { background: "#F06060", color: "#fff" }
+            : { background: "#F3F4F6", color: "#6B7280" }}
+        >
+          🎁 Gratis cadeaus
+          <span className="ml-2 text-xs opacity-70">({cadeauRows.length})</span>
+        </button>
+      </div>
+
+      {tab === "cadeaus" && (
+        <div className="mb-4 p-4 rounded-xl text-sm" style={{ background: "#FEF3C7", color: "#92400E" }}>
+          <strong>Gratis cadeau:</strong> klanten mogen één product hieruit kiezen als verrassing bij hun pakket. Klik op 🎁 bij een regulier product om het hier toe te voegen, of op ✕ om het te verwijderen.
         </div>
       )}
 
@@ -123,21 +170,29 @@ export default function VoorraadPage() {
             <tr className="bg-gray-50 text-left text-xs text-gray-400 uppercase tracking-wide">
               <th className="px-4 py-3 font-semibold">Product</th>
               <th className="px-4 py-3 font-semibold">Inkoop</th>
-              <th className="px-4 py-3 font-semibold">Geslacht</th>
-              <th className="px-4 py-3 font-semibold">Leeftijd</th>
-              <th className="px-4 py-3 font-semibold">Voorraad</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 font-semibold"></th>
+              {tab === "regulier" && <th className="px-4 py-3 font-semibold">Geslacht</th>}
+              {tab === "regulier" && <th className="px-4 py-3 font-semibold">Leeftijd</th>}
+              {tab === "regulier" && <th className="px-4 py-3 font-semibold">Voorraad</th>}
+              {tab === "regulier" && <th className="px-4 py-3 font-semibold">Status</th>}
+              <th className="px-4 py-3 font-semibold">{tab === "cadeaus" ? "Verwijderen" : "Cadeau"}</th>
+              {tab === "regulier" && <th className="px-4 py-3 font-semibold"></th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={8} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  {tab === "cadeaus" ? "Nog geen cadeauproducten — voeg ze toe via de tab 'Reguliere producten'" : "Geen producten gevonden"}
+                </td>
+              </tr>
+            )}
             {filtered.map((row) => (
               <tr
                 key={row.id}
                 className={
-                  !row.isActive ? "opacity-40" :
-                  row.quantity === 0 ? "bg-red-50/30" :
-                  row.quantity < 5 ? "bg-yellow-50/30" : ""
+                  tab === "regulier" && !row.isActive ? "opacity-40" :
+                  tab === "regulier" && row.quantity === 0 ? "bg-red-50/30" :
+                  tab === "regulier" && row.quantity < 5 ? "bg-yellow-50/30" : ""
                 }
               >
                 <td className="px-4 py-3">
@@ -145,69 +200,92 @@ export default function VoorraadPage() {
                   <div className="text-xs text-gray-400">{row.ean ?? "–"}</div>
                 </td>
                 <td className="px-4 py-3 font-semibold text-gray-600">{euroFmt(row.purchasePriceExcl)}</td>
-                <td className="px-4 py-3">
-                  <select
-                    value={row.gender}
-                    onChange={(e) => update(row.id, "gender", e.target.value)}
-                    className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
-                  >
-                    <option value="boy">👦 Jongen</option>
-                    <option value="girl">👧 Meisje</option>
-                    <option value="unisex">🧒 Uniseks</option>
-                  </select>
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    value={`${row.ageMin}-${row.ageMax}`}
-                    onChange={(e) => {
-                      const [min, max] = e.target.value.split("-").map(Number);
-                      update(row.id, "ageMin", min);
-                      update(row.id, "ageMax", max);
-                    }}
-                    className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
-                  >
-                    {AGE_OPTIONS.map((opt) => (
-                      <option key={opt.label} value={`${opt.min}-${opt.max}`}>{opt.label}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={0}
-                      value={row.quantity}
-                      onChange={(e) => update(row.id, "quantity", parseInt(e.target.value) || 0)}
-                      className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:border-[#9B91BE]"
-                    />
-                    {row.quantity === 0 && <span className="text-xs text-red-500 font-bold">Uit</span>}
-                    {row.quantity > 0 && row.quantity < 5 && (
-                      <span className="text-xs text-yellow-600 font-bold">Laag</span>
-                    )}
-                  </div>
-                </td>
+
+                {tab === "regulier" && (
+                  <td className="px-4 py-3">
+                    <select
+                      value={row.gender}
+                      onChange={(e) => update(row.id, "gender", e.target.value)}
+                      className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                    >
+                      <option value="boy">👦 Jongen</option>
+                      <option value="girl">👧 Meisje</option>
+                      <option value="unisex">🧒 Uniseks</option>
+                    </select>
+                  </td>
+                )}
+                {tab === "regulier" && (
+                  <td className="px-4 py-3">
+                    <select
+                      value={`${row.ageMin}-${row.ageMax}`}
+                      onChange={(e) => {
+                        const [min, max] = e.target.value.split("-").map(Number);
+                        update(row.id, "ageMin", min);
+                        update(row.id, "ageMax", max);
+                      }}
+                      className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                    >
+                      {AGE_OPTIONS.map((opt) => (
+                        <option key={opt.label} value={`${opt.min}-${opt.max}`}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </td>
+                )}
+                {tab === "regulier" && (
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        value={row.quantity}
+                        onChange={(e) => update(row.id, "quantity", parseInt(e.target.value) || 0)}
+                        className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:border-[#9B91BE]"
+                      />
+                      {row.quantity === 0 && <span className="text-xs text-red-500 font-bold">Uit</span>}
+                      {row.quantity > 0 && row.quantity < 5 && (
+                        <span className="text-xs text-yellow-600 font-bold">Laag</span>
+                      )}
+                    </div>
+                  </td>
+                )}
+                {tab === "regulier" && (
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => update(row.id, "isActive", !row.isActive)}
+                      className="text-xs px-2 py-1 rounded-full font-semibold"
+                      style={row.isActive
+                        ? { background: "#D1FAE5", color: "#065F46" }
+                        : { background: "#F3F4F6", color: "#6B7280" }
+                      }
+                    >
+                      {row.isActive ? "Actief" : "Inactief"}
+                    </button>
+                  </td>
+                )}
+
+                {/* Gift toggle */}
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => update(row.id, "isActive", !row.isActive)}
-                    className="text-xs px-2 py-1 rounded-full font-semibold"
-                    style={row.isActive
-                      ? { background: "#D1FAE5", color: "#065F46" }
-                      : { background: "#F3F4F6", color: "#6B7280" }
-                    }
+                    onClick={() => toggleGift(row)}
+                    title={row.isGift ? "Verwijder als cadeau" : "Voeg toe als cadeau"}
+                    className="text-lg hover:scale-110 transition-transform"
                   >
-                    {row.isActive ? "Actief" : "Inactief"}
+                    {row.isGift ? "✕" : "🎁"}
                   </button>
                 </td>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => save(row)}
-                    disabled={saving === row.id}
-                    className="text-xs px-3 py-1.5 rounded-lg font-bold text-white disabled:opacity-50 transition-opacity"
-                    style={{ background: "#9B91BE" }}
-                  >
-                    {saving === row.id ? "…" : "Opslaan"}
-                  </button>
-                </td>
+
+                {tab === "regulier" && (
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => save(row)}
+                      disabled={saving === row.id}
+                      className="text-xs px-3 py-1.5 rounded-lg font-bold text-white disabled:opacity-50 transition-opacity"
+                      style={{ background: "#9B91BE" }}
+                    >
+                      {saving === row.id ? "…" : "Opslaan"}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

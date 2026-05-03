@@ -82,23 +82,34 @@ export default function HomePage() {
       {/* How it works */}
       <section id="hoe-werkt-het" className="bg-white border-t border-gray-100 py-16">
         <div className="max-w-5xl mx-auto px-6">
-          <h2 className="text-2xl font-black text-center mb-10" style={{ color: "#2D2B3A" }}>Hoe werkt het?</h2>
-          <div className="grid grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-4xl mb-3">1️⃣</div>
-              <h3 className="font-black text-gray-700 mb-2">Kies je pakket</h3>
-              <p className="text-sm text-gray-500">Kies de leeftijdscategorie die bij jouw kind past</p>
-            </div>
-            <div>
-              <div className="text-4xl mb-3">2️⃣</div>
-              <h3 className="font-black text-gray-700 mb-2">Wij stellen samen</h3>
-              <p className="text-sm text-gray-500">Ons systeem selecteert 5–6 leuke speeltjes, nooit dubbel</p>
-            </div>
-            <div>
-              <div className="text-4xl mb-3">3️⃣</div>
-              <h3 className="font-black text-gray-700 mb-2">Snel bezorgd</h3>
-              <p className="text-sm text-gray-500">Jouw pakket komt vlot thuis — klaar om te verrassen</p>
-            </div>
+          <h2 className="text-3xl font-black text-center mb-2" style={{ color: "#2D2B3A" }}>Hoe werkt het?</h2>
+          <p className="text-center text-gray-400 mb-12 text-sm">In 4 simpele stappen naar jouw mystery box!</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
+            {[
+              { num: 1, color: "#5B8DEF", icon: "👆", title: "Kies je categorie", sub: "Selecteer leeftijd en geslacht" },
+              { num: 2, color: "#F4924A", icon: "📦", title: "Kies je voorkeuren", sub: "Leeftijd en geslacht" },
+              { num: 3, color: "#E85D9C", icon: "🎁", title: "Gratis cadeau", sub: "Kies een extraatje erbij" },
+              { num: 4, color: "#4DC97E", icon: "🎉", title: "Uitpakken!", sub: "Geniet van de verrassing" },
+            ].map((step) => (
+              <div key={step.num} className="flex flex-col items-center">
+                <div className="relative mb-4">
+                  <div
+                    className="w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-md"
+                    style={{ background: step.color }}
+                  >
+                    {step.icon}
+                  </div>
+                  <div
+                    className="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white shadow"
+                    style={{ background: step.color, filter: "brightness(0.85)" }}
+                  >
+                    {step.num}
+                  </div>
+                </div>
+                <h3 className="font-black text-gray-700 mb-1 text-sm">{step.title}</h3>
+                <p className="text-xs text-gray-400">{step.sub}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
