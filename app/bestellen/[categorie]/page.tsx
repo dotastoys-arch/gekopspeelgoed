@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_COLOR } from "@/lib/categories";
+import { CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_COLOR, SLUG_TO_CATEGORY } from "@/lib/categories";
 import type { Category } from "@/lib/db/schema";
 
 interface GiftProduct {
@@ -19,7 +19,7 @@ interface FormState {
   city: string;
 }
 
-export default function BestelPage({ params }: { params: Promise<{ categorie: Category }> }) {
+export default function BestelPage({ params }: { params: Promise<{ categorie: string }> }) {
   return (
     <Suspense fallback={null}>
       <BestelPageInner params={params} />
@@ -27,10 +27,11 @@ export default function BestelPage({ params }: { params: Promise<{ categorie: Ca
   );
 }
 
-function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> }) {
+function BestelPageInner({ params }: { params: Promise<{ categorie: string }> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const discountToken = searchParams.get("token");
+  // urlDiscountToken: only set when user comes from abandoned cart email → enables 10% discount
+  const urlDiscountToken = searchParams.get("token");
 
   const [cat, setCat] = useState<Category | null>(null);
   const [step, setStep] = useState<"form" | "cadeau">("form");
@@ -41,20 +42,23 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> 
   const [error, setError] = useState("");
   const [addressStatus, setAddressStatus] = useState<"idle" | "loading" | "found" | "not_found">("idle");
   const [returningCustomer, setReturningCustomer] = useState(false);
-  const [abandonedToken, setAbandonedToken] = useState<string | null>(null);
+  // cartToken: token of the saved abandoned cart (used to mark it completed on order, no discount)
+  const [cartToken, setCartToken] = useState<string | null>(null);
 
   const addressLookupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    params.then((p) => setCat(p.categorie));
+    params.then((p) => {
+      const category = SLUG_TO_CATEGORY[p.categorie] ?? null;
+      setCat(category);
+    });
     fetch("/api/cadeaus").then((r) => r.json()).then(setGifts).catch(() => setGifts([]));
   }, [params]);
 
-  // Load abandoned cart data if token present
+  // Load abandoned cart data if token present (only when arriving from email link)
   useEffect(() => {
-    if (!discountToken) return;
-    setAbandonedToken(discountToken);
-    fetch(`/api/abandoned-cart?token=${discountToken}`)
+    if (!urlDiscountToken) return;
+    fetch(`/api/abandoned-cart?token=${urlDiscountToken}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.found) {
@@ -71,7 +75,7 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> 
         }
       })
       .catch(() => {});
-  }, [discountToken]);
+  }, [urlDiscountToken]);
 
   const lookupAddress = useCallback((postalCode: string, huisnummer: string) => {
     const pc = postalCode.replace(/\s/g, "");
@@ -134,7 +138,7 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: form.name, email: form.email, address, postalCode: form.postalCode, city: form.city, category: cat }),
     }).then((r) => r.json()).then((d) => {
-      if (d.token && !abandonedToken) setAbandonedToken(d.token);
+      if (d.token) setCartToken(d.token);
     }).catch(() => {});
     setStep("cadeau");
   }
@@ -156,7 +160,8 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> 
         postalCode: form.postalCode,
         city: form.city,
         giftProductId,
-        discountToken: abandonedToken ?? null,
+        // urlDiscountToken gives 10% off; cartToken just marks the cart completed
+        discountToken: urlDiscountToken ?? cartToken ?? null,
       }),
     });
 
@@ -181,7 +186,7 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> 
   const label = CATEGORY_LABELS[cat];
   const emoji = CATEGORY_EMOJI[cat];
   const color = CATEGORY_COLOR[cat];
-  const hasDiscount = !!abandonedToken;
+  const hasDiscount = !!urlDiscountToken;
   const displayPrice = hasDiscount ? "€31,46" : "€34,95";
 
   return (
@@ -227,7 +232,7 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> 
           </div>
           <div className="flex-1">
             <h1 className="text-xl font-black text-gray-800">{label}</h1>
-            <p className="text-sm text-gray-500">5–6 verrassende speeltjes · uniek samengesteld · snel bezorgd</p>
+            <p className="text-sm text-gray-500">5–6 verrassende speeltjes · uniek samengesteld · morgen verstuurd</p>
           </div>
           <div className="text-right">
             {hasDiscount && <div className="text-sm line-through text-gray-400">€34,95</div>}
@@ -319,7 +324,7 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> 
                   Volgende: kies je cadeau →
                 </button>
                 <p className="text-xs text-center text-gray-400 mt-3">
-                  Je betaalt veilig via Mollie. Na betaling ontvang je een bevestiging per e-mail.
+                  🚀 Vandaag besteld = morgen verstuurd · Betaal veilig via Mollie
                 </p>
               </div>
             </form>
@@ -384,11 +389,11 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: Category }> 
               )}
               <button onClick={() => submitOrder(selectedGift)} disabled={loading}
                 className="w-full py-4 rounded-2xl font-black text-white text-lg disabled:opacity-60 transition-opacity"
-                style={{ background: "#F06060" }}>
+                style={{ background: "#4DC97E" }}>
                 {loading ? "Bestelling aanmaken…" : `🎁 Bestel nu — ${displayPrice}`}
               </button>
               <p className="text-xs text-center text-gray-400 mt-3">
-                Je betaalt veilig via Mollie. Na betaling ontvang je een bevestiging per e-mail.
+                🚀 Vandaag besteld = morgen verstuurd · Betaal veilig via Mollie
               </p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_COLOR, CATEGORIES } from "@/lib/categories";
+import { CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_COLOR, CATEGORIES, CATEGORY_SLUG } from "@/lib/categories";
 import type { Category } from "@/lib/db/schema";
 
 export const metadata: Metadata = {
@@ -118,7 +118,7 @@ export default function HomePage() {
 
         <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400">
           <span>✅ 5–6 speeltjes per pakket</span>
-          <span>🚀 Snel verzonden</span>
+          <span>🚀 Vandaag besteld = morgen verstuurd</span>
           <span>🎁 Altijd verrassing</span>
           <span>♥ Nooit hetzelfde</span>
         </div>
@@ -131,7 +131,7 @@ export default function HomePage() {
           {CATEGORIES.map((cat) => (
             <Link
               key={cat}
-              href={`/bestellen/${cat}`}
+              href={`/bestellen/${CATEGORY_SLUG[cat]}`}
               className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 border border-transparent hover:border-[#9B91BE]/20 block"
             >
               <div

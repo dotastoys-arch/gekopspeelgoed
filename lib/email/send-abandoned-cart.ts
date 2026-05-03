@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { CATEGORY_LABELS, CATEGORY_EMOJI } from "@/lib/categories";
+import { CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_SLUG } from "@/lib/categories";
 import type { Category } from "@/lib/db/schema";
 
 interface AbandonedCartData {
@@ -21,7 +21,7 @@ function getTransporter() {
 export async function sendAbandonedCartEmail(data: AbandonedCartData): Promise<void> {
   const { customerName, customerEmail, category, discountToken } = data;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://gekopspeelgoed.nl";
-  const resumeUrl = `${baseUrl}/bestellen/${category}?token=${discountToken}`;
+  const resumeUrl = `${baseUrl}/bestellen/${CATEGORY_SLUG[category]}?token=${discountToken}`;
   const categoryLabel = CATEGORY_LABELS[category];
   const categoryEmoji = CATEGORY_EMOJI[category];
 
