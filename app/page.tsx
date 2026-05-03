@@ -5,6 +5,7 @@ import { existsSync } from "fs";
 import { join } from "path";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
+import Confetti from "@/components/Confetti";
 import { CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_COLOR, CATEGORIES, CATEGORY_SLUG } from "@/lib/categories";
 import type { Category } from "@/lib/db/schema";
 
@@ -74,7 +75,9 @@ export default function HomePage() {
       <SiteHeader />
 
       {/* Hero */}
-      <section style={{ background: "linear-gradient(160deg, #EDE9F8 0%, #FDE8E8 50%, #E8F8EE 100%)" }} className="px-4 sm:px-6 pt-12 pb-14 sm:pt-20 sm:pb-20 text-center">
+      <section style={{ background: "linear-gradient(160deg, #EDE9F8 0%, #FDE8E8 50%, #E8F8EE 100%)" }} className="relative px-4 sm:px-6 pt-12 pb-14 sm:pt-20 sm:pb-20 text-center overflow-hidden">
+        <Confetti />
+        <div className="relative z-10">
         <div className="text-6xl sm:text-7xl mb-5 animate-bounce" style={{ animationDuration: "2s" }}>🎁</div>
         <h1 className="text-3xl sm:text-5xl font-black mb-4 leading-tight" style={{ color: "#2D2B3A" }}>
           Verrassingspakket <br className="sm:hidden" />
@@ -105,6 +108,7 @@ export default function HomePage() {
           🎉 Kies jouw pakket →
         </Link>
         <p className="text-xs text-gray-400 mt-3">Vandaag besteld = morgen verstuurd</p>
+        </div>
       </section>
 
       {/* Packages */}
