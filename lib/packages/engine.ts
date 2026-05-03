@@ -170,21 +170,73 @@ export async function generatePackage(
   };
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function greedyFill(
+  pool: Array<{ id: number; purchasePriceExcl: number; [key: string]: unknown }>,
+  alreadySelected: typeof pool,
+  slotsLeft: number,
+  budget: number
+): typeof pool {
+  const result: typeof pool = [];
+  let remaining = budget;
+  for (const item of pool) {
+    if (result.length >= slotsLeft) break;
+    if (item.purchasePriceExcl <= remaining) {
+      result.push(item);
+      remaining -= item.purchasePriceExcl;
+    }
+  }
+  return result;
+}
+
 function selectItems(
   eligible: Array<{ id: number; name: string; purchasePriceExcl: number; gender: string; ageMin: number; ageMax: number; ean: string | null; imageUrl: string | null; quantity: number }>,
   count: number,
   maxBudget: number
 ) {
-  // Shuffle eligible list for variety across orders
-  const shuffled = [...eligible].sort(() => Math.random() - 0.5);
+  const EXPENSIVE_COUNT = 2;
+  const cheapCount = count - EXPENSIVE_COUNT;
 
+  // Split on median price: top half = expensive, bottom half = cheap
+  const sorted = [...eligible].sort((a, b) => a.purchasePriceExcl - b.purchasePriceExcl);
+  const splitIdx = Math.ceil(sorted.length / 2);
+  const cheapPool = shuffle(sorted.slice(0, splitIdx));
+  const expensivePool = shuffle(sorted.slice(splitIdx));
+
+  // Only attempt tiered selection when both pools have enough items
+  if (expensivePool.length >= EXPENSIVE_COUNT && cheapPool.length >= cheapCount) {
+    // Try each combination: pick 2 from expensive, fill rest from cheap
+    for (const exp of expensivePool) {
+      const expCost = exp.purchasePriceExcl;
+      const budgetForCheap = maxBudget - expCost;
+
+      // Pick a second expensive item
+      const secondCandidates = expensivePool.filter((p) => p.id !== exp.id);
+      for (const exp2 of secondCandidates) {
+        const twoExpCost = expCost + exp2.purchasePriceExcl;
+        if (twoExpCost > maxBudget) continue;
+
+        const budgetLeft = maxBudget - twoExpCost;
+        const cheapFill = greedyFill(cheapPool.filter((p) => p.id !== exp.id && p.id !== exp2.id), [], cheapCount, budgetLeft);
+
+        if (cheapFill.length === cheapCount) {
+          return [exp, exp2, ...cheapFill];
+        }
+      }
+    }
+  }
+
+  // Fallback: greedy shuffle (original behavior) when tiered selection fails
+  const shuffled = shuffle(eligible);
   const selected: typeof eligible = [];
   let remaining = maxBudget;
 
   for (const item of shuffled) {
     if (selected.length >= count) break;
     const remainingSlots = count - selected.length;
-    // Ensure we can still fill remaining slots with cheapest possible items
     const minCostForRest = shuffled
       .filter((p) => !selected.includes(p) && p !== item)
       .sort((a, b) => a.purchasePriceExcl - b.purchasePriceExcl)
