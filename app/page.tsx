@@ -125,10 +125,10 @@ export default function HomePage() {
               <Link
                 key={cat}
                 href={`/bestellen/${CATEGORY_SLUG[cat]}`}
-                className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 block"
+                className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col"
               >
                 {hasImage ? (
-                  <div className="relative w-full h-44 overflow-hidden">
+                  <div className="relative w-full h-44 flex-shrink-0 overflow-hidden">
                     <Image
                       src={imgSrc}
                       alt={CATEGORY_LABELS[cat]}
@@ -139,21 +139,21 @@ export default function HomePage() {
                     <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 50%, white 100%)` }} />
                   </div>
                 ) : (
-                  <div className="h-2 w-full" style={{ background: CATEGORY_COLOR[cat] }} />
+                  <div className="h-2 w-full flex-shrink-0" style={{ background: CATEGORY_COLOR[cat] }} />
                 )}
 
-                <div className="p-5 sm:p-6">
+                <div className="p-5 sm:p-6 flex flex-col flex-1">
                   {!hasImage && (
                     <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4"
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-4 flex-shrink-0"
                       style={{ background: CATEGORY_COLOR[cat] + "25" }}
                     >
                       {CATEGORY_EMOJI[cat]}
                     </div>
                   )}
                   <h3 className="font-black text-gray-800 text-lg mb-1">{CATEGORY_LABELS[cat]}</h3>
-                  <p className="text-sm text-gray-400 mb-5 leading-relaxed">{CATEGORY_DESCRIPTIONS[cat]}</p>
-                  <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-400 leading-relaxed flex-1">{CATEGORY_DESCRIPTIONS[cat]}</p>
+                  <div className="flex items-center justify-between mt-5">
                     <div>
                       <div className="text-2xl font-black" style={{ color: "#9B91BE" }}>€34,95</div>
                       <div className="text-xs text-green-600 font-semibold mt-0.5">🏷️ Beste prijs</div>
