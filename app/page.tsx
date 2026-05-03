@@ -129,7 +129,7 @@ export default function HomePage() {
                       src={imgSrc}
                       alt={CATEGORY_LABELS[cat]}
                       fill
-                      className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                      className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                     <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 50%, white 100%)` }} />
