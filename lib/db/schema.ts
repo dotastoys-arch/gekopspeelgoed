@@ -1,6 +1,9 @@
-import { pgTable, text, integer, serial, boolean, timestamp, doublePrecision } from "drizzle-orm/pg-core";
+import { pgSchema, text, integer, serial, boolean, timestamp, doublePrecision } from "drizzle-orm/pg-core";
 
-export const products = pgTable("products", {
+// Eigen schema zodat gekopspeelgoed-tabellen gescheiden blijven van dotastoys
+const gos = pgSchema("gos");
+
+export const products = gos.table("products", {
   id: serial("id").primaryKey(),
   ean: text("ean").unique(),
   articleNumber: text("article_number"),
@@ -14,14 +17,14 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const inventory = pgTable("inventory", {
+export const inventory = gos.table("inventory", {
   id: serial("id").primaryKey(),
   productId: integer("product_id").notNull().references(() => products.id),
   quantity: integer("quantity").notNull().default(0),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const invoices = pgTable("invoices", {
+export const invoices = gos.table("invoices", {
   id: serial("id").primaryKey(),
   supplier: text("supplier").notNull(),
   invoiceNumber: text("invoice_number"),
@@ -33,7 +36,7 @@ export const invoices = pgTable("invoices", {
   uploadedAt: timestamp("uploaded_at").defaultNow(),
 });
 
-export const invoiceLines = pgTable("invoice_lines", {
+export const invoiceLines = gos.table("invoice_lines", {
   id: serial("id").primaryKey(),
   invoiceId: integer("invoice_id").notNull().references(() => invoices.id),
   productId: integer("product_id").references(() => products.id),
@@ -45,7 +48,7 @@ export const invoiceLines = pgTable("invoice_lines", {
   totalExcl: doublePrecision("total_excl").notNull(),
 });
 
-export const packageConfigs = pgTable("package_configs", {
+export const packageConfigs = gos.table("package_configs", {
   id: serial("id").primaryKey(),
   category: text("category", {
     enum: ["baby_0_3", "boys_3_5", "boys_6_8", "girls_3_5", "girls_6_8"],
@@ -59,7 +62,7 @@ export const packageConfigs = pgTable("package_configs", {
   isActive: boolean("is_active").notNull().default(true),
 });
 
-export const customers = pgTable("customers", {
+export const customers = gos.table("customers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -70,7 +73,7 @@ export const customers = pgTable("customers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const orders = pgTable("orders", {
+export const orders = gos.table("orders", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").notNull().references(() => customers.id),
   category: text("category", {
@@ -87,7 +90,7 @@ export const orders = pgTable("orders", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const orderItems = pgTable("order_items", {
+export const orderItems = gos.table("order_items", {
   id: serial("id").primaryKey(),
   orderId: integer("order_id").notNull().references(() => orders.id),
   productId: integer("product_id").notNull().references(() => products.id),
