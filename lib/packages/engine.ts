@@ -1,0 +1,256 @@
+import { db } from "@/lib/db";
+import { products, inventory, packageConfigs, orders, orderItems, customers } from "@/lib/db/schema";
+import { eq, and, gt, inArray, not, sql } from "drizzle-orm";
+import type { Category } from "@/lib/db/schema";
+
+export interface PackageProduct {
+  productId: number;
+  name: string;
+  purchasePriceExcl: number;
+  ean: string | null;
+  imageUrl: string | null;
+}
+
+export interface GeneratedPackage {
+  category: Category;
+  items: PackageProduct[];
+  totalPurchaseExcl: number;
+  sellingPriceIncl: number;
+  sellingPriceExcl: number;
+  shippingCost: number;
+  vatOnSale: number;
+  contribution: number;
+  profit: number;
+  marginPct: number;
+  viable: boolean;
+  reason?: string;
+}
+
+export interface PackageViability {
+  possiblePackages: number;
+  insufficientStock: string[];
+  insufficientMargin: boolean;
+}
+
+// Returns categories that match a product's age/gender
+export function productMatchesCategory(
+  product: { gender: string; ageMin: number; ageMax: number },
+  category: Category
+): boolean {
+  const { gender, ageMin, ageMax } = product;
+
+  switch (category) {
+    case "baby_0_3":
+      return ageMax <= 4 && (gender === "unisex" || gender === "boy" || gender === "girl");
+    case "boys_3_5":
+      return (gender === "boy" || gender === "unisex") && ageMin <= 5 && ageMax >= 3;
+    case "boys_6_8":
+      return (gender === "boy" || gender === "unisex") && ageMin <= 8 && ageMax >= 5;
+    case "girls_3_5":
+      return (gender === "girl" || gender === "unisex") && ageMin <= 5 && ageMax >= 3;
+    case "girls_6_8":
+      return (gender === "girl" || gender === "unisex") && ageMin <= 8 && ageMax >= 5;
+  }
+}
+
+export async function generatePackage(
+  category: Category,
+  customerId: number
+): Promise<GeneratedPackage> {
+  // Get config for this category
+  const config = await db.query.packageConfigs.findFirst({
+    where: eq(packageConfigs.category, category),
+  });
+
+  if (!config) throw new Error(`Geen configuratie voor categorie ${category}`);
+
+  const vatRate = config.vatRate / 100;
+  const sellingPriceExcl = config.sellingPriceIncl / (1 + vatRate);
+  const contribution = sellingPriceExcl - config.shippingCost;
+  const maxPurchaseCost25pct = contribution * (1 - config.minMarginPct / 100);
+  const maxPurchaseCostMinProfit = contribution - config.minProfit;
+  const maxBudget = Math.min(maxPurchaseCost25pct, maxPurchaseCostMinProfit);
+
+  // Get products already sent to this customer
+  const previousOrders = await db.query.orders.findMany({
+    where: eq(orders.customerId, customerId),
+    with: { orderItems: true },
+  });
+
+  const usedProductIds = new Set<number>(
+    previousOrders.flatMap((o) => (o as any).orderItems?.map((i: any) => i.productId) ?? [])
+  );
+
+  // Get all active products with stock > 0 that match this category
+  const allProducts = await db
+    .select({
+      id: products.id,
+      name: products.name,
+      purchasePriceExcl: products.purchasePriceExcl,
+      gender: products.gender,
+      ageMin: products.ageMin,
+      ageMax: products.ageMax,
+      ean: products.ean,
+      imageUrl: products.imageUrl,
+      quantity: inventory.quantity,
+    })
+    .from(products)
+    .innerJoin(inventory, eq(inventory.productId, products.id))
+    .where(and(eq(products.isActive, true), gt(inventory.quantity, 0)));
+
+  const eligible = allProducts.filter(
+    (p) =>
+      productMatchesCategory(p, category) &&
+      !usedProductIds.has(p.id) &&
+      p.purchasePriceExcl <= maxBudget
+  );
+
+  if (eligible.length < config.itemsCount) {
+    return {
+      category,
+      items: [],
+      totalPurchaseExcl: 0,
+      sellingPriceIncl: config.sellingPriceIncl,
+      sellingPriceExcl,
+      shippingCost: config.shippingCost,
+      vatOnSale: config.sellingPriceIncl - sellingPriceExcl,
+      contribution,
+      profit: 0,
+      marginPct: 0,
+      viable: false,
+      reason:
+        eligible.length === 0
+          ? "Geen producten beschikbaar voor deze categorie"
+          : `Te weinig producten beschikbaar (${eligible.length} van ${config.itemsCount} nodig)`,
+    };
+  }
+
+  // Greedy selection: pick items to maximize variety while staying within budget
+  const selected = selectItems(eligible, config.itemsCount, maxBudget);
+
+  if (selected.length < config.itemsCount) {
+    return {
+      category,
+      items: [],
+      totalPurchaseExcl: 0,
+      sellingPriceIncl: config.sellingPriceIncl,
+      sellingPriceExcl,
+      shippingCost: config.shippingCost,
+      vatOnSale: config.sellingPriceIncl - sellingPriceExcl,
+      contribution,
+      profit: 0,
+      marginPct: 0,
+      viable: false,
+      reason: "Pakket past niet binnen het budget met minimale winsteis",
+    };
+  }
+
+  const totalPurchaseExcl = selected.reduce((s, p) => s + p.purchasePriceExcl, 0);
+  const profit = contribution - totalPurchaseExcl;
+  const marginPct = (profit / contribution) * 100;
+
+  return {
+    category,
+    items: selected.map((p) => ({
+      productId: p.id,
+      name: p.name,
+      purchasePriceExcl: p.purchasePriceExcl,
+      ean: p.ean,
+      imageUrl: p.imageUrl,
+    })),
+    totalPurchaseExcl,
+    sellingPriceIncl: config.sellingPriceIncl,
+    sellingPriceExcl,
+    shippingCost: config.shippingCost,
+    vatOnSale: config.sellingPriceIncl - sellingPriceExcl,
+    contribution,
+    profit,
+    marginPct,
+    viable: true,
+  };
+}
+
+function selectItems(
+  eligible: Array<{ id: number; name: string; purchasePriceExcl: number; gender: string; ageMin: number; ageMax: number; ean: string | null; imageUrl: string | null; quantity: number }>,
+  count: number,
+  maxBudget: number
+) {
+  // Shuffle eligible list for variety across orders
+  const shuffled = [...eligible].sort(() => Math.random() - 0.5);
+
+  const selected: typeof eligible = [];
+  let remaining = maxBudget;
+
+  for (const item of shuffled) {
+    if (selected.length >= count) break;
+    const remainingSlots = count - selected.length;
+    // Ensure we can still fill remaining slots with cheapest possible items
+    const minCostForRest = shuffled
+      .filter((p) => !selected.includes(p) && p !== item)
+      .sort((a, b) => a.purchasePriceExcl - b.purchasePriceExcl)
+      .slice(0, remainingSlots - 1)
+      .reduce((s, p) => s + p.purchasePriceExcl, 0);
+
+    if (item.purchasePriceExcl + minCostForRest <= remaining) {
+      selected.push(item);
+      remaining -= item.purchasePriceExcl;
+    }
+  }
+
+  return selected;
+}
+
+export async function calculateViability(category: Category): Promise<{
+  totalProducts: number;
+  totalStock: number;
+  estimatedPackages: number;
+  maxPurchaseBudget: number;
+  avgPurchaseCost: number;
+}> {
+  const config = await db.query.packageConfigs.findFirst({
+    where: eq(packageConfigs.category, category),
+  });
+  if (!config) throw new Error("Geen configuratie");
+
+  const vatRate = config.vatRate / 100;
+  const sellingPriceExcl = config.sellingPriceIncl / (1 + vatRate);
+  const contribution = sellingPriceExcl - config.shippingCost;
+  const maxBudget = Math.min(
+    contribution * (1 - config.minMarginPct / 100),
+    contribution - config.minProfit
+  );
+
+  const allProducts = await db
+    .select({
+      id: products.id,
+      purchasePriceExcl: products.purchasePriceExcl,
+      gender: products.gender,
+      ageMin: products.ageMin,
+      ageMax: products.ageMax,
+      quantity: inventory.quantity,
+    })
+    .from(products)
+    .innerJoin(inventory, eq(inventory.productId, products.id))
+    .where(and(eq(products.isActive, true), gt(inventory.quantity, 0)));
+
+  const matching = allProducts.filter(
+    (p) => productMatchesCategory(p, category) && p.purchasePriceExcl <= maxBudget
+  );
+
+  const totalStock = matching.reduce((s, p) => s + p.quantity, 0);
+  const avgCost = matching.length
+    ? matching.reduce((s, p) => s + p.purchasePriceExcl, 0) / matching.length
+    : 0;
+
+  const avgPackageCost = avgCost * config.itemsCount;
+  const estimatedPackages =
+    avgPackageCost > 0 ? Math.floor(totalStock / config.itemsCount) : 0;
+
+  return {
+    totalProducts: matching.length,
+    totalStock,
+    estimatedPackages,
+    maxPurchaseBudget: maxBudget,
+    avgPurchaseCost: avgCost,
+  };
+}

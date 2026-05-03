@@ -30,8 +30,15 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files
+.env
+.env.local
+.env.*.local
+# Keep .env.example in git
+!.env.example
+
+# SQLite (no longer used, but exclude any leftover data files)
+/data/
 
 # vercel
 .vercel

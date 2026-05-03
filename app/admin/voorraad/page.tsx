@@ -1,0 +1,218 @@
+"use client";
+import { useEffect, useState } from "react";
+
+type Gender = "boy" | "girl" | "unisex";
+
+interface ProductRow {
+  id: number;
+  name: string;
+  ean: string | null;
+  purchasePriceExcl: number;
+  gender: Gender;
+  ageMin: number;
+  ageMax: number;
+  isActive: boolean;
+  quantity: number;
+  inventoryId: number;
+}
+
+const AGE_OPTIONS = [
+  { label: "0–3 jaar", min: 0, max: 3 },
+  { label: "3–5 jaar", min: 3, max: 5 },
+  { label: "6–8 jaar", min: 6, max: 8 },
+  { label: "3–8 jaar", min: 3, max: 8 },
+  { label: "0–8 jaar", min: 0, max: 8 },
+];
+
+function euroFmt(n: number) {
+  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(n);
+}
+
+export default function VoorraadPage() {
+  const [rows, setRows] = useState<ProductRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("");
+  const [genderFilter, setGenderFilter] = useState<Gender | "all">("all");
+  const [saving, setSaving] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/voorraad")
+      .then((r) => r.json())
+      .then((d) => { setRows(d.products ?? []); setLoading(false); });
+  }, []);
+
+  async function save(row: ProductRow) {
+    setSaving(row.id);
+    await fetch("/api/admin/voorraad", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: row.id,
+        quantity: row.quantity,
+        gender: row.gender,
+        ageMin: row.ageMin,
+        ageMax: row.ageMax,
+        isActive: row.isActive,
+      }),
+    });
+    setSaving(null);
+  }
+
+  function update(id: number, field: keyof ProductRow, value: unknown) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  }
+
+  const filtered = rows.filter((r) => {
+    const textMatch = r.name.toLowerCase().includes(filter.toLowerCase()) || (r.ean ?? "").includes(filter);
+    const genderMatch = genderFilter === "all" || r.gender === genderFilter;
+    return textMatch && genderMatch;
+  });
+
+  const lowStock = rows.filter((r) => r.quantity > 0 && r.quantity < 5).length;
+  const outOfStock = rows.filter((r) => r.quantity === 0 && r.isActive).length;
+
+  if (loading) return <div className="p-8 text-gray-400">Laden…</div>;
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-black mb-1" style={{ color: "#9B91BE" }}>Voorraad</h1>
+      <p className="text-gray-400 text-sm mb-6">Beheer je producten en voorraadhoeveelheden</p>
+
+      {/* Alerts */}
+      {(lowStock > 0 || outOfStock > 0) && (
+        <div className="flex gap-3 mb-6">
+          {lowStock > 0 && (
+            <div className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: "#FEF3C7", color: "#92400E" }}>
+              ⚠️ {lowStock} product{lowStock > 1 ? "en" : ""} bijna uitverkocht (&lt;5 stuks)
+            </div>
+          )}
+          {outOfStock > 0 && (
+            <div className="px-4 py-2 rounded-xl text-sm font-semibold" style={{ background: "#FEE2E2", color: "#DC2626" }}>
+              🔴 {outOfStock} product{outOfStock > 1 ? "en" : ""} uitverkocht
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="flex gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Zoek op naam of EAN…"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border border-gray-200 rounded-xl px-4 py-2 text-sm w-64 focus:outline-none focus:border-[#9B91BE]"
+        />
+        <select
+          value={genderFilter}
+          onChange={(e) => setGenderFilter(e.target.value as Gender | "all")}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#9B91BE]"
+        >
+          <option value="all">Alle geslachten</option>
+          <option value="boy">👦 Jongen</option>
+          <option value="girl">👧 Meisje</option>
+          <option value="unisex">🧒 Uniseks</option>
+        </select>
+        <span className="ml-auto text-sm text-gray-400 self-center">{filtered.length} producten</span>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 text-left text-xs text-gray-400 uppercase tracking-wide">
+              <th className="px-4 py-3 font-semibold">Product</th>
+              <th className="px-4 py-3 font-semibold">Inkoop</th>
+              <th className="px-4 py-3 font-semibold">Geslacht</th>
+              <th className="px-4 py-3 font-semibold">Leeftijd</th>
+              <th className="px-4 py-3 font-semibold">Voorraad</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
+              <th className="px-4 py-3 font-semibold"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {filtered.map((row) => (
+              <tr
+                key={row.id}
+                className={
+                  !row.isActive ? "opacity-40" :
+                  row.quantity === 0 ? "bg-red-50/30" :
+                  row.quantity < 5 ? "bg-yellow-50/30" : ""
+                }
+              >
+                <td className="px-4 py-3">
+                  <div className="font-semibold text-gray-700 max-w-xs leading-tight">{row.name}</div>
+                  <div className="text-xs text-gray-400">{row.ean ?? "–"}</div>
+                </td>
+                <td className="px-4 py-3 font-semibold text-gray-600">{euroFmt(row.purchasePriceExcl)}</td>
+                <td className="px-4 py-3">
+                  <select
+                    value={row.gender}
+                    onChange={(e) => update(row.id, "gender", e.target.value)}
+                    className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                  >
+                    <option value="boy">👦 Jongen</option>
+                    <option value="girl">👧 Meisje</option>
+                    <option value="unisex">🧒 Uniseks</option>
+                  </select>
+                </td>
+                <td className="px-4 py-3">
+                  <select
+                    value={`${row.ageMin}-${row.ageMax}`}
+                    onChange={(e) => {
+                      const [min, max] = e.target.value.split("-").map(Number);
+                      update(row.id, "ageMin", min);
+                      update(row.id, "ageMax", max);
+                    }}
+                    className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
+                  >
+                    {AGE_OPTIONS.map((opt) => (
+                      <option key={opt.label} value={`${opt.min}-${opt.max}`}>{opt.label}</option>
+                    ))}
+                  </select>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      value={row.quantity}
+                      onChange={(e) => update(row.id, "quantity", parseInt(e.target.value) || 0)}
+                      className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:border-[#9B91BE]"
+                    />
+                    {row.quantity === 0 && <span className="text-xs text-red-500 font-bold">Uit</span>}
+                    {row.quantity > 0 && row.quantity < 5 && (
+                      <span className="text-xs text-yellow-600 font-bold">Laag</span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => update(row.id, "isActive", !row.isActive)}
+                    className="text-xs px-2 py-1 rounded-full font-semibold"
+                    style={row.isActive
+                      ? { background: "#D1FAE5", color: "#065F46" }
+                      : { background: "#F3F4F6", color: "#6B7280" }
+                    }
+                  >
+                    {row.isActive ? "Actief" : "Inactief"}
+                  </button>
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => save(row)}
+                    disabled={saving === row.id}
+                    className="text-xs px-3 py-1.5 rounded-lg font-bold text-white disabled:opacity-50 transition-opacity"
+                    style={{ background: "#9B91BE" }}
+                  >
+                    {saving === row.id ? "…" : "Opslaan"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
