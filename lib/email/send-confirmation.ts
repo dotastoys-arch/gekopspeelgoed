@@ -178,7 +178,7 @@ export async function sendOrderConfirmation(data: OrderConfirmationData): Promis
     <td style="padding:24px 40px;text-align:center;">
       <p style="margin:0;color:#9CA3AF;font-size:12px;">
         Vragen? Mail ons op
-        <a href="mailto:${process.env.SMTP_USER ?? "dotastoys@gmail.com"}" style="color:#9B91BE;text-decoration:none;">${process.env.SMTP_USER ?? "dotastoys@gmail.com"}</a>
+        <a href="mailto:${process.env.SMTP_USER ?? "info@gekopspeelgoed.nl"}" style="color:#9B91BE;text-decoration:none;">${process.env.SMTP_USER ?? "info@gekopspeelgoed.nl"}</a>
       </p>
       <p style="margin:6px 0 0;color:#D1D5DB;font-size:11px;">GEK OP SPEELGOED · gekopspeelgoed.nl</p>
     </td>
@@ -197,6 +197,6 @@ export async function sendOrderConfirmation(data: OrderConfirmationData): Promis
     to: customerEmail,
     subject: `✅ Bestelling #${orderId} bevestigd — GEK OP SPEELGOED`,
     html,
-    text: `Hoi ${customerName}!\n\nJe bestelling #${orderId} is bevestigd.\nPakket: ${categoryLabel}\nBedrag: €${priceFormatted}\n\nWij stellen je pakket samen en versturen het binnen 1-3 werkdagen.\n\nVragen? Mail ons op ${process.env.SMTP_USER ?? "dotastoys@gmail.com"}\n\nGEK OP SPEELGOED`,
+    text: `Hoi ${customerName}!\n\nJe bestelling #${orderId} is bevestigd.\nPakket: ${categoryLabel}\nBedrag: €${priceFormatted}\n\nWij stellen je pakket samen en versturen het binnen 1-3 werkdagen.\n\nVragen? Mail ons op ${process.env.SMTP_USER ?? "info@gekopspeelgoed.nl"}\n\nGEK OP SPEELGOED`,
   });
 }

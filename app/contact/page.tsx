@@ -20,14 +20,14 @@ export default function ContactPage() {
           </p>
 
           <div className="space-y-4 mb-8">
-            <a href="mailto:dotastoys@gmail.com"
+            <a href="mailto:info@gekopspeelgoed.nl"
               className="flex items-center gap-4 p-4 rounded-2xl border-2 hover:border-[#9B91BE] transition-colors"
               style={{ borderColor: "#E5E7EB" }}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
                 style={{ background: "#EDE9F8" }}>📧</div>
               <div>
                 <div className="font-black text-gray-800">E-mail</div>
-                <div className="text-sm text-gray-500">dotastoys@gmail.com</div>
+                <div className="text-sm text-gray-500">info@gekopspeelgoed.nl</div>
               </div>
             </a>
           </div>

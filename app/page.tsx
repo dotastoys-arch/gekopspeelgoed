@@ -43,7 +43,7 @@ const schemaOrgOrg = {
   "@type": "Organization",
   name: "Gek op Speelgoed",
   url: "https://gekopspeelgoed.nl",
-  contactPoint: { "@type": "ContactPoint", contactType: "customer service", email: "dotastoys@gmail.com", availableLanguage: "Dutch" },
+  contactPoint: { "@type": "ContactPoint", contactType: "customer service", email: "info@gekopspeelgoed.nl", availableLanguage: "Dutch" },
 };
 
 export default function HomePage() {

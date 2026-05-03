@@ -109,7 +109,7 @@ export async function sendAbandonedCartEmail(data: AbandonedCartData): Promise<v
   <tr>
     <td style="padding:24px 40px;text-align:center;">
       <p style="margin:0;color:#9CA3AF;font-size:12px;">
-        Vragen? <a href="mailto:${process.env.SMTP_USER ?? "dotastoys@gmail.com"}" style="color:#9B91BE;">${process.env.SMTP_USER ?? "dotastoys@gmail.com"}</a>
+        Vragen? <a href="mailto:${process.env.SMTP_USER ?? "info@gekopspeelgoed.nl"}" style="color:#9B91BE;">${process.env.SMTP_USER ?? "info@gekopspeelgoed.nl"}</a>
       </p>
       <p style="margin:6px 0 0;color:#D1D5DB;font-size:11px;">GEK OP SPEELGOED · gekopspeelgoed.nl</p>
     </td>

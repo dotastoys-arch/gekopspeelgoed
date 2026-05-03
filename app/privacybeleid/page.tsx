@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Privacybeleid", description: "Privac
 const sections = [
   {
     title: "1. Wie zijn wij?",
-    content: "Gek op Speelgoed is verantwoordelijk voor de verwerking van persoonsgegevens zoals beschreven in dit privacybeleid. Contact: dotastoys@gmail.com.",
+    content: "Gek op Speelgoed is verantwoordelijk voor de verwerking van persoonsgegevens zoals beschreven in dit privacybeleid. Contact: info@gekopspeelgoed.nl.",
   },
   {
     title: "2. Welke gegevens verwerken wij?",
@@ -32,7 +32,7 @@ const sections = [
   },
   {
     title: "7. Jouw rechten",
-    content: "Je hebt het recht op inzage, correctie of verwijdering van jouw persoonsgegevens. Stuur hiervoor een e-mail naar dotastoys@gmail.com. Wij reageren binnen 30 dagen.",
+    content: "Je hebt het recht op inzage, correctie of verwijdering van jouw persoonsgegevens. Stuur hiervoor een e-mail naar info@gekopspeelgoed.nl. Wij reageren binnen 30 dagen.",
   },
   {
     title: "8. Beveiliging",
