@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { getSession } from "@/lib/session";
+import { db } from "@/lib/db";
+import { invoices } from "@/lib/db/schema";
+import { eq, or } from "drizzle-orm";
 import { suggestCategory } from "@/lib/pdf/suggest-category";
 
 export const runtime = "nodejs";
@@ -15,6 +19,21 @@ export async function POST(req: NextRequest) {
     if (!file) return NextResponse.json({ error: "Geen bestand" }, { status: 400 });
 
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Duplicate detection: hash the PDF bytes
+    const fileHash = createHash("sha256").update(buffer).digest("hex");
+
+    // Check for exact same file (hash) or same invoice number
+    // We also parse the invoice number from the text later, so we do a pre-check by hash first
+    const hashDuplicate = await db.query.invoices.findFirst({
+      where: eq(invoices.fileHash, fileHash),
+    });
+    if (hashDuplicate) {
+      return NextResponse.json({
+        duplicate: true,
+        error: `Dit PDF-bestand is al eerder geüpload (factuur ${hashDuplicate.invoiceNumber ?? hashDuplicate.id} van ${hashDuplicate.invoiceDate ?? hashDuplicate.uploadedAt?.toLocaleDateString("nl-NL") ?? "onbekende datum"}).`,
+      }, { status: 409 });
+    }
 
     // Use lib directly to avoid pdf-parse v1 test-file-on-import bug
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -40,7 +59,21 @@ export async function POST(req: NextRequest) {
       totalExcl: totalExclMatch ? parseAmount(totalExclMatch[1]) : 0,
       totalBtw: totalBtwMatch ? parseAmount(totalBtwMatch[1]) : 0,
       totalIncl: totalInclMatch ? parseAmount(totalInclMatch[1]) : 0,
+      fileHash,
     };
+
+    // Also check invoice number duplicate (same invoice, different filename)
+    if (meta.invoiceNumber) {
+      const numberDuplicate = await db.query.invoices.findFirst({
+        where: eq(invoices.invoiceNumber, meta.invoiceNumber),
+      });
+      if (numberDuplicate) {
+        return NextResponse.json({
+          duplicate: true,
+          error: `Factuur ${meta.invoiceNumber} is al eerder geüpload (op ${numberDuplicate.uploadedAt?.toLocaleDateString("nl-NL") ?? "onbekende datum"}).`,
+        }, { status: 409 });
+      }
+    }
 
     const products = parseProducts(lines);
 

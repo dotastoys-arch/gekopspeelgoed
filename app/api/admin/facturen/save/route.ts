@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
       totalBtw: meta.totalBtw,
       totalIncl: meta.totalIncl,
       filename: meta.filename ?? null,
+      fileHash: meta.fileHash ?? null,
     })
     .returning();
 

@@ -34,6 +34,7 @@ export const invoices = gos.table("invoices", {
   totalBtw: doublePrecision("total_btw"),
   totalIncl: doublePrecision("total_incl"),
   filename: text("filename"),
+  fileHash: text("file_hash"),
   uploadedAt: timestamp("uploaded_at").defaultNow(),
 });
 
