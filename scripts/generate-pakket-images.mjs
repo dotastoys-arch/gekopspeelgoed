@@ -43,18 +43,19 @@ mkdirSync(outputDir, { recursive: true });
 for (const cat of categories) {
   console.log(`Generating: ${cat.filename}...`);
   try {
-    const response = await ai.models.generateImages({
-      model: "imagen-3.0-generate-002",
-      prompt: cat.prompt,
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-image",
+      contents: cat.prompt,
       config: {
-        numberOfImages: 1,
-        outputMimeType: "image/png",
-        aspectRatio: "1:1",
+        responseModalities: ["IMAGE"],
       },
     });
 
-    const imageData = response.generatedImages[0].image.imageBytes;
-    const buffer = Buffer.from(imageData, "base64");
+    const parts = response.candidates?.[0]?.content?.parts ?? [];
+    const imagePart = parts.find((p) => p.inlineData);
+    if (!imagePart?.inlineData) throw new Error("No image in response");
+
+    const buffer = Buffer.from(imagePart.inlineData.data, "base64");
     writeFileSync(join(outputDir, cat.filename), buffer);
     console.log(`  ✓ Saved ${cat.filename}`);
   } catch (err) {
