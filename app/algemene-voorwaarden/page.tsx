@@ -28,7 +28,7 @@ const sections = [
   },
   {
     title: "6. Garantie",
-    content: "Op alle producten geldt de wettelijke garantie. Als een product defect is, neem dan contact op via info@gekopspeelgoed.nl.",
+    content: "Op alle producten geldt de wettelijke garantie. Als een product defect is, neem dan contact op via onze contactpagina.",
   },
   {
     title: "7. Privacy",
@@ -36,7 +36,7 @@ const sections = [
   },
   {
     title: "8. Klachten",
-    content: "Klachten kunnen ingediend worden via info@gekopspeelgoed.nl. We streven ernaar klachten binnen 5 werkdagen te beantwoorden.",
+    content: "Klachten kunnen ingediend worden via onze contactpagina. We streven ernaar klachten binnen 5 werkdagen te beantwoorden.",
   },
   {
     title: "9. Toepasselijk recht",

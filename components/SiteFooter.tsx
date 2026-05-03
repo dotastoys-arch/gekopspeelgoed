@@ -15,7 +15,6 @@ export default function SiteFooter() {
               Verrassende speelgoedpakketten voor ieder kind. Goedkoper dan de winkel, altijd verrassing!
             </p>
             <div className="flex flex-col gap-1 text-sm text-gray-400">
-              <span>📧 <a href="mailto:info@gekopspeelgoed.nl" className="hover:text-white transition-colors">info@gekopspeelgoed.nl</a></span>
               <span>🚀 Vandaag besteld = morgen verstuurd</span>
             </div>
           </div>

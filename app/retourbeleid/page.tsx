@@ -27,7 +27,7 @@ export default function RetourbeleidPage() {
             <h2 className="font-black text-gray-800 mb-3">Hoe werkt retourneren?</h2>
             <ol className="space-y-3 text-sm">
               {[
-                "Stuur een e-mail naar info@gekopspeelgoed.nl met je bestelnummer en de reden van retour.",
+                "Neem contact op via onze contactpagina met je bestelnummer en de reden van retour.",
                 "Je ontvangt van ons de retourinstructies per e-mail.",
                 "Stuur de producten ongebruikt en in originele verpakking retour.",
                 "Na ontvangst en controle vergoeden wij het aankoopbedrag binnen 14 dagen.",
@@ -48,7 +48,7 @@ export default function RetourbeleidPage() {
 
           <div>
             <h2 className="font-black text-gray-800 mb-2">Defecte producten</h2>
-            <p className="text-sm">Ontvang je een defect product? Neem dan binnen 7 dagen contact met ons op via <a href="mailto:info@gekopspeelgoed.nl" className="font-semibold" style={{ color: "#9B91BE" }}>info@gekopspeelgoed.nl</a> met een foto van het defect. Wij lossen het kosteloos op.</p>
+            <p className="text-sm">Ontvang je een defect product? Neem dan binnen 7 dagen <Link href="/contact" className="font-semibold hover:underline" style={{ color: "#9B91BE" }}>contact met ons op</Link> met een foto van het defect. Wij lossen het kosteloos op.</p>
           </div>
 
           <div>
