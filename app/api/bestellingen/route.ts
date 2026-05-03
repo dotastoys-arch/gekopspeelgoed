@@ -9,7 +9,7 @@ import createMollieClient from "@mollie/api-client";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const { category, name, email, address, postalCode, city, giftProductId, discountToken } = await req.json();
+  const { category, name, email, address, postalCode, city, giftProductId, discountToken, cartToken } = await req.json();
 
   if (!category || !name || !email || !address || !postalCode || !city) {
     return NextResponse.json({ error: "Vul alle verplichte velden in" }, { status: 400 });
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     await db.update(customers).set({ name, address, postalCode, city }).where(eq(customers.id, customer.id));
   }
 
-  // Validate discount token
+  // Validate discount token (from abandoned cart email link — gives 10% off)
   let discountPct = 0;
   let abandonedCartId: number | null = null;
   if (discountToken) {
@@ -38,6 +38,11 @@ export async function POST(req: NextRequest) {
       discountPct = 10;
       abandonedCartId = cart.id;
     }
+  }
+  // Mark regular cart as completed (no discount, just close the abandoned cart record)
+  if (!abandonedCartId && cartToken) {
+    const cart = await db.query.abandonedCarts.findFirst({ where: eq(abandonedCarts.token, cartToken) });
+    if (cart && !cart.completedAt) abandonedCartId = cart.id;
   }
 
   // Generate package (takes customer history into account)

@@ -160,8 +160,8 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: string }> })
         postalCode: form.postalCode,
         city: form.city,
         giftProductId,
-        // urlDiscountToken gives 10% off; cartToken just marks the cart completed
-        discountToken: urlDiscountToken ?? cartToken ?? null,
+        discountToken: urlDiscountToken ?? null,
+        cartToken: cartToken ?? null,
       }),
     });
 

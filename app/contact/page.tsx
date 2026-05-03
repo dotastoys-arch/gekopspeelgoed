@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = { title: "Contact", description: "Neem contact op met Gek op Speelgoed." };
 
 export default function ContactPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#FAFAF9" }}>
-      <header className="bg-white border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
-          <Link href="/" className="font-black text-lg" style={{ color: "#9B91BE" }}>
-            GEK OP <span style={{ color: "#F06060" }}>♥</span> SPEELGOED
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16 flex-1">
         <div className="text-5xl mb-6 text-center">💬</div>

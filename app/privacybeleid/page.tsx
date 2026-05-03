@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = { title: "Privacybeleid", description: "Privacybeleid van Gek op Speelgoed." };
 
@@ -46,13 +47,7 @@ const sections = [
 export default function PrivacybeleidPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#FAFAF9" }}>
-      <header className="bg-white border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
-          <Link href="/" className="font-black text-lg" style={{ color: "#9B91BE" }}>
-            GEK OP <span style={{ color: "#F06060" }}>♥</span> SPEELGOED
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16 flex-1">
         <h1 className="text-3xl sm:text-4xl font-black mb-2" style={{ color: "#2D2B3A" }}>Privacybeleid</h1>

@@ -24,11 +24,11 @@ export default function SiteFooter() {
           <div>
             <h3 className="font-black text-sm text-gray-300 mb-4 uppercase tracking-wider">Pakketten</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link href="/bestellen/baby-0-3" className="hover:text-white transition-colors">Baby 0–3 jaar 👶</Link></li>
-              <li><Link href="/bestellen/jongens-3-5" className="hover:text-white transition-colors">Jongens 3–5 jaar 🚀</Link></li>
-              <li><Link href="/bestellen/jongens-6-8" className="hover:text-white transition-colors">Jongens 6–8 jaar ⚡</Link></li>
-              <li><Link href="/bestellen/meisjes-3-5" className="hover:text-white transition-colors">Meisjes 3–5 jaar 🌸</Link></li>
-              <li><Link href="/bestellen/meisjes-6-8" className="hover:text-white transition-colors">Meisjes 6–8 jaar ✨</Link></li>
+              <li><Link href="/bestellen/baby-0-3-jaar" className="hover:text-white transition-colors">Baby 0–3 jaar 👶</Link></li>
+              <li><Link href="/bestellen/jongens-3-5-jaar" className="hover:text-white transition-colors">Jongens 3–5 jaar 🚀</Link></li>
+              <li><Link href="/bestellen/jongens-6-8-jaar" className="hover:text-white transition-colors">Jongens 6–8 jaar ⚡</Link></li>
+              <li><Link href="/bestellen/meisjes-3-5-jaar" className="hover:text-white transition-colors">Meisjes 3–5 jaar 🌸</Link></li>
+              <li><Link href="/bestellen/meisjes-6-8-jaar" className="hover:text-white transition-colors">Meisjes 6–8 jaar ✨</Link></li>
             </ul>
           </div>
 

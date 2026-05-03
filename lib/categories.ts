@@ -34,20 +34,27 @@ export const CATEGORIES: Category[] = [
 
 // Dutch URL slugs for each category
 export const CATEGORY_SLUG: Record<Category, string> = {
-  baby_0_3: "baby-0-3",
-  boys_3_5: "jongens-3-5",
-  boys_6_8: "jongens-6-8",
-  girls_3_5: "meisjes-3-5",
-  girls_6_8: "meisjes-6-8",
+  baby_0_3: "baby-0-3-jaar",
+  boys_3_5: "jongens-3-5-jaar",
+  boys_6_8: "jongens-6-8-jaar",
+  girls_3_5: "meisjes-3-5-jaar",
+  girls_6_8: "meisjes-6-8-jaar",
 };
 
 export const SLUG_TO_CATEGORY: Record<string, Category> = {
+  // current slugs with -jaar
+  "baby-0-3-jaar": "baby_0_3",
+  "jongens-3-5-jaar": "boys_3_5",
+  "jongens-6-8-jaar": "boys_6_8",
+  "meisjes-3-5-jaar": "girls_3_5",
+  "meisjes-6-8-jaar": "girls_6_8",
+  // old slugs without -jaar (fallback)
   "baby-0-3": "baby_0_3",
   "jongens-3-5": "boys_3_5",
   "jongens-6-8": "boys_6_8",
   "meisjes-3-5": "girls_3_5",
   "meisjes-6-8": "girls_6_8",
-  // keep old slugs working as fallback
+  // English slugs (fallback)
   "baby_0_3": "baby_0_3",
   "boys_3_5": "boys_3_5",
   "boys_6_8": "boys_6_8",

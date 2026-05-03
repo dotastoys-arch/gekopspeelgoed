@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 import { CATEGORY_LABELS, CATEGORY_EMOJI, CATEGORY_COLOR, CATEGORIES, CATEGORY_SLUG } from "@/lib/categories";
 import type { Category } from "@/lib/db/schema";
 
@@ -51,23 +52,7 @@ export default function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrgProduct) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrgOrg) }} />
 
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-          <div className="font-black text-base sm:text-xl" style={{ color: "#9B91BE" }}>
-            GEK OP <span style={{ color: "#F06060" }}>♥</span> SPEELGOED
-          </div>
-          <nav className="hidden sm:flex gap-6 text-sm font-semibold text-gray-500">
-            <Link href="#pakketten" className="hover:text-[#9B91BE] transition-colors">Pakketten</Link>
-            <Link href="#hoe-werkt-het" className="hover:text-[#9B91BE] transition-colors">Hoe werkt het?</Link>
-          </nav>
-          <Link href="#pakketten"
-            className="sm:hidden text-xs font-black text-white px-4 py-2 rounded-xl"
-            style={{ background: "#9B91BE" }}>
-            Bestel nu
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Hero */}
       <section style={{ background: "linear-gradient(160deg, #EDE9F8 0%, #FDE8E8 50%, #E8F8EE 100%)" }} className="px-4 sm:px-6 pt-12 pb-14 sm:pt-20 sm:pb-20 text-center">
