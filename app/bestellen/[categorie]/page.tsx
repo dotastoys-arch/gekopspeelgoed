@@ -205,7 +205,7 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: string }> })
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Discount banner */}
         {hasDiscount && (
           <div className="rounded-2xl p-4 mb-6 flex items-center gap-3" style={{ background: "#FEF2F2", border: "2px solid #F06060" }}>
@@ -226,42 +226,43 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: string }> })
         )}
 
         {/* Package header */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-8 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: color + "30" }}>
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0" style={{ background: color + "30" }}>
             {emoji}
           </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-black text-gray-800">{label}</h1>
-            <p className="text-sm text-gray-500">5–6 verrassende speeltjes · uniek samengesteld · morgen verstuurd</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base sm:text-xl font-black text-gray-800">{label}</h1>
+            <p className="text-xs sm:text-sm text-gray-400 hidden sm:block">5–6 verrassende speeltjes · morgen verstuurd</p>
+            <p className="text-xs text-gray-400 sm:hidden">5–6 speeltjes · morgen verstuurd</p>
           </div>
-          <div className="text-right">
-            {hasDiscount && <div className="text-sm line-through text-gray-400">€34,95</div>}
-            <div className="text-2xl font-black" style={{ color: hasDiscount ? "#F06060" : "#9B91BE" }}>{displayPrice}</div>
-            <div className="text-xs text-gray-400">incl. BTW + verzending</div>
+          <div className="text-right flex-shrink-0">
+            {hasDiscount && <div className="text-xs line-through text-gray-400">€34,95</div>}
+            <div className="text-xl sm:text-2xl font-black" style={{ color: hasDiscount ? "#F06060" : "#9B91BE" }}>{displayPrice}</div>
+            <div className="text-xs text-gray-400">incl. BTW</div>
           </div>
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white"
+        <div className="flex items-center gap-1 sm:gap-2 mb-8">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
               style={{ background: step === "form" ? "#9B91BE" : "#D1FAE5" }}>
               {step === "form" ? "1" : "✓"}
             </div>
-            <span className={`text-sm font-semibold ${step === "form" ? "text-gray-700" : "text-green-600"}`}>Gegevens</span>
+            <span className={`text-xs sm:text-sm font-semibold ${step === "form" ? "text-gray-700" : "text-green-600"}`}>Gegevens</span>
           </div>
-          <div className="flex-1 h-px bg-gray-200 mx-2" />
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white"
-              style={{ background: step === "cadeau" ? "#F06060" : "#E5E7EB" }}>
+          <div className="flex-1 h-px bg-gray-200" />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+              style={{ background: step === "cadeau" ? "#4DC97E" : "#E5E7EB" }}>
               2
             </div>
-            <span className={`text-sm font-semibold ${step === "cadeau" ? "text-gray-700" : "text-gray-400"}`}>Gratis cadeau</span>
+            <span className={`text-xs sm:text-sm font-semibold ${step === "cadeau" ? "text-gray-700" : "text-gray-400"}`}>Cadeau</span>
           </div>
-          <div className="flex-1 h-px bg-gray-200 mx-2" />
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white bg-gray-200">3</div>
-            <span className="text-sm font-semibold text-gray-400">Betalen</span>
+          <div className="flex-1 h-px bg-gray-200" />
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white bg-gray-200 flex-shrink-0">3</div>
+            <span className="text-xs sm:text-sm font-semibold text-gray-400">Betalen</span>
           </div>
         </div>
 
@@ -270,7 +271,7 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: string }> })
           <div className="bg-white rounded-2xl p-8 shadow-sm">
             <h2 className="font-black text-gray-700 text-lg mb-6">Jouw gegevens</h2>
             <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Naam *">
                   <input type="text" placeholder="Voor- en achternaam" required value={form.name}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="input-field" />
@@ -283,7 +284,7 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: string }> })
                 </FormField>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField label="Postcode *">
                   <input type="text" placeholder="1234 AB" required value={form.postalCode}
                     onChange={(e) => handlePostcodeChange(e.target.value)} className="input-field" />
@@ -292,14 +293,16 @@ function BestelPageInner({ params }: { params: Promise<{ categorie: string }> })
                   <input type="text" placeholder="12A" required value={form.huisnummer}
                     onChange={(e) => handleHuisnummerChange(e.target.value)} className="input-field" />
                 </FormField>
-                <div className="flex items-end pb-1">
-                  {addressStatus === "loading" && <span className="text-xs text-gray-400">Zoeken…</span>}
-                  {addressStatus === "found" && <span className="text-xs font-semibold text-green-600">✓ Adres gevonden</span>}
-                  {addressStatus === "not_found" && <span className="text-xs font-semibold text-red-500">Adres niet gevonden</span>}
-                </div>
               </div>
+              {(addressStatus === "loading" || addressStatus === "found" || addressStatus === "not_found") && (
+                <div className="text-xs -mt-2">
+                  {addressStatus === "loading" && <span className="text-gray-400">🔍 Adres zoeken…</span>}
+                  {addressStatus === "found" && <span className="font-semibold text-green-600">✓ Adres gevonden</span>}
+                  {addressStatus === "not_found" && <span className="font-semibold text-red-500">Adres niet gevonden, vul handmatig in</span>}
+                </div>
+              )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Straat *">
                   <input type="text" placeholder="Voorbeeldstraat" required value={form.street}
                     onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))}
