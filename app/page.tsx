@@ -120,38 +120,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TikTok banner */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
-        <div className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6"
-          style={{ background: "linear-gradient(135deg, #010101 0%, #1a1a2e 60%, #EE1D52 130%)" }}>
-          <div className="flex items-center gap-3">
-            <svg width="28" height="32" viewBox="0 0 24 27" fill="none" className="flex-shrink-0">
-              <path d="M19.6 5.4A5.6 5.6 0 0 1 16 3.8V11h-3.4v9.3a4 4 0 1 1-4-4V13a7.4 7.4 0 1 0 7.4 7.4V9.2a8.9 8.9 0 0 0 5.2 1.7V7.5a5.6 5.6 0 0 1-1.6-2.1Z" fill="white"/>
-            </svg>
-            <div>
-              <p className="text-white font-black text-sm sm:text-base leading-tight">Bekend van TikTok</p>
-              <p className="text-white/60 text-xs">Viral gegaan — duizenden ouders gingen je voor!</p>
-            </div>
-          </div>
-          <div className="flex gap-4 text-center">
-            <div>
-              <div className="text-white font-black text-lg sm:text-xl leading-none">500K+</div>
-              <div className="text-white/50 text-xs mt-0.5">views</div>
-            </div>
-            <div className="w-px bg-white/20" />
-            <div>
-              <div className="text-white font-black text-lg sm:text-xl leading-none">4.8⭐</div>
-              <div className="text-white/50 text-xs mt-0.5">reviews</div>
-            </div>
-            <div className="w-px bg-white/20" />
-            <div>
-              <div className="text-white font-black text-lg sm:text-xl leading-none">€34,95</div>
-              <div className="text-white/50 text-xs mt-0.5">per pakket</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Packages */}
       <section id="pakketten" className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <div className="text-center mb-8 sm:mb-10">
