@@ -115,7 +115,7 @@ export default function FacturenPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-4 sm:p-8 max-w-7xl">
       <h1 className="text-2xl font-black mb-1" style={{ color: "#9B91BE" }}>Facturen</h1>
       <p className="text-gray-400 text-sm mb-8">Upload een inkoopfactuur (PDF of afbeelding) om producten en voorraad bij te werken</p>
 
