@@ -36,6 +36,7 @@ export default function VoorraadPage() {
   const [filter, setFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState<Gender | "all">("all");
   const [saving, setSaving] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "qty-asc" | "qty-desc">("name-asc");
 
   useEffect(() => {
     fetch("/api/admin/voorraad")
@@ -79,11 +80,19 @@ export default function VoorraadPage() {
   const cadeauRows = rows.filter((r) => r.isGift);
 
   const activeRows = tab === "cadeaus" ? cadeauRows : regulierRows;
-  const filtered = activeRows.filter((r) => {
-    const textMatch = r.name.toLowerCase().includes(filter.toLowerCase()) || (r.ean ?? "").includes(filter);
-    const genderMatch = genderFilter === "all" || r.gender === genderFilter;
-    return textMatch && genderMatch;
-  });
+  const filtered = activeRows
+    .filter((r) => {
+      const textMatch = r.name.toLowerCase().includes(filter.toLowerCase()) || (r.ean ?? "").includes(filter);
+      const genderMatch = genderFilter === "all" || r.gender === genderFilter;
+      return textMatch && genderMatch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name-asc") return a.name.localeCompare(b.name, "nl");
+      if (sortBy === "name-desc") return b.name.localeCompare(a.name, "nl");
+      if (sortBy === "qty-asc") return a.quantity - b.quantity;
+      if (sortBy === "qty-desc") return b.quantity - a.quantity;
+      return 0;
+    });
 
   const lowStock = regulierRows.filter((r) => r.quantity > 0 && r.quantity < 5).length;
   const outOfStock = regulierRows.filter((r) => r.quantity === 0 && r.isActive).length;
@@ -152,6 +161,13 @@ export default function VoorraadPage() {
           <option value="boy">👦 Jongen</option>
           <option value="girl">👧 Meisje</option>
           <option value="unisex">🧒 Uniseks</option>
+        </select>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[#9B91BE]">
+          <option value="name-asc">A → Z</option>
+          <option value="name-desc">Z → A</option>
+          <option value="qty-desc">Voorraad: hoog → laag</option>
+          <option value="qty-asc">Voorraad: laag → hoog</option>
         </select>
         <span className="text-sm text-gray-400 self-center sm:ml-auto">{filtered.length} producten</span>
       </div>
