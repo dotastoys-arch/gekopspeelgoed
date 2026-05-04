@@ -36,7 +36,7 @@ export default function VoorraadPage() {
   const [filter, setFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState<Gender | "all">("all");
   const [saving, setSaving] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "qty-asc" | "qty-desc">("name-asc");
+  const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "qty-asc" | "qty-desc" | "price-asc" | "price-desc">("name-asc");
 
   useEffect(() => {
     fetch("/api/admin/voorraad")
@@ -91,6 +91,8 @@ export default function VoorraadPage() {
       if (sortBy === "name-desc") return b.name.localeCompare(a.name, "nl");
       if (sortBy === "qty-asc") return a.quantity - b.quantity;
       if (sortBy === "qty-desc") return b.quantity - a.quantity;
+      if (sortBy === "price-asc") return a.purchasePriceExcl - b.purchasePriceExcl;
+      if (sortBy === "price-desc") return b.purchasePriceExcl - a.purchasePriceExcl;
       return 0;
     });
 
@@ -168,6 +170,8 @@ export default function VoorraadPage() {
           <option value="name-desc">Z → A</option>
           <option value="qty-desc">Voorraad: hoog → laag</option>
           <option value="qty-asc">Voorraad: laag → hoog</option>
+          <option value="price-desc">Inkoop: hoog → laag</option>
+          <option value="price-asc">Inkoop: laag → hoog</option>
         </select>
         <span className="text-sm text-gray-400 self-center sm:ml-auto">{filtered.length} producten</span>
       </div>
