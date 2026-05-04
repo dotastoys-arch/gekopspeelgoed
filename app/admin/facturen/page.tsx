@@ -82,7 +82,7 @@ export default function FacturenPage() {
       e.preventDefault();
       setDragging(false);
       const file = e.dataTransfer.files[0];
-      if (file?.type === "application/pdf") handleFile(file);
+      if (file && (file.type === "application/pdf" || file.type.startsWith("image/"))) handleFile(file);
     },
     [handleFile]
   );
@@ -117,7 +117,7 @@ export default function FacturenPage() {
   return (
     <div className="p-8 max-w-7xl">
       <h1 className="text-2xl font-black mb-1" style={{ color: "#9B91BE" }}>Facturen</h1>
-      <p className="text-gray-400 text-sm mb-8">Upload een inkoopfactuur (PDF) om producten en voorraad bij te werken</p>
+      <p className="text-gray-400 text-sm mb-8">Upload een inkoopfactuur (PDF of afbeelding) om producten en voorraad bij te werken</p>
 
       {/* Upload area */}
       {rows.length === 0 && !savedResult && (
@@ -132,20 +132,20 @@ export default function FacturenPage() {
           <input
             id="pdf-input"
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp"
             className="hidden"
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
           />
           {uploading ? (
             <div>
-              <div className="text-4xl mb-3 animate-pulse">📄</div>
-              <p className="text-gray-500 font-semibold">PDF verwerken…</p>
+              <div className="text-4xl mb-3 animate-pulse">🔍</div>
+              <p className="text-gray-500 font-semibold">Factuur verwerken…</p>
             </div>
           ) : (
             <div>
               <div className="text-4xl mb-3">📁</div>
-              <p className="font-bold text-gray-600">Sleep PDF hierheen of klik om te kiezen</p>
-              <p className="text-sm text-gray-400 mt-1">Ondersteunt Dino Trading / dinotoys.nl facturen</p>
+              <p className="font-bold text-gray-600">Sleep factuur hierheen of klik om te kiezen</p>
+              <p className="text-sm text-gray-400 mt-1">PDF of screenshot (PNG, JPG) — Gemini leest de afbeelding automatisch uit</p>
             </div>
           )}
         </div>

@@ -3,8 +3,11 @@ import { createHash } from "crypto";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { invoices } from "@/lib/db/schema";
-import { eq, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { suggestCategory } from "@/lib/pdf/suggest-category";
+import { GoogleGenAI } from "@google/genai";
+
+const IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -35,34 +38,106 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
-    // Use lib directly to avoid pdf-parse v1 test-file-on-import bug
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (buf: Buffer) => Promise<{ text: string }>;
-    const data = await pdfParse(buffer);
-    const text = data.text;
-    const lines = text.split("\n").map((l: string) => l.trim()).filter(Boolean);
+    const isImage = IMAGE_TYPES.includes(file.type);
 
-    // Extract invoice metadata from full text
-    const fullText = lines.join(" ");
-    const invoiceNumberMatch = fullText.match(/Factuur nummer\s+(\d+)/);
-    const invoiceDateMatch = fullText.match(/Factuurdatum\s+([\d\-]+)/);
-    const totalExclMatch = fullText.match(/SubTotaal\s*:\s*€\s*([\d.,]+)/);
-    const totalBtwMatch = fullText.match(/BTW bedrag 21\s*%\s*:\s*€\s*([\d.,]+)/);
-    const totalInclMatch = fullText.match(/Totaal\s*:\s*€\s*([\d.,]+)/);
+    let meta: { supplier: string; invoiceNumber: string; invoiceDate: string; totalExcl: number; totalBtw: number; totalIncl: number; fileHash: string };
+    let products: RawProduct[];
 
-    const parseAmount = (s: string) => parseFloat(s.replace(/\./g, "").replace(",", ".")) || 0;
+    if (isImage) {
+      // ── Image: extract via Gemini Vision ──────────────────────────────────
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const base64 = buffer.toString("base64");
 
-    const meta = {
-      supplier: fullText.includes("Dino Trading") ? "Dino Trading bv" : "Onbekende leverancier",
-      invoiceNumber: invoiceNumberMatch?.[1] ?? "",
-      invoiceDate: invoiceDateMatch?.[1] ?? "",
-      totalExcl: totalExclMatch ? parseAmount(totalExclMatch[1]) : 0,
-      totalBtw: totalBtwMatch ? parseAmount(totalBtwMatch[1]) : 0,
-      totalIncl: totalInclMatch ? parseAmount(totalInclMatch[1]) : 0,
-      fileHash,
-    };
+      const prompt = `This is an invoice image. Extract ALL information and return ONLY valid JSON (no markdown, no explanation).
 
-    // Also check invoice number duplicate (same invoice, different filename)
+Return this exact structure:
+{
+  "supplier": "supplier name",
+  "invoiceNumber": "invoice number or empty string",
+  "invoiceDate": "date as YYYY-MM-DD or DD-MM-YYYY as shown",
+  "totalExcl": 0.00,
+  "totalBtw": 0.00,
+  "totalIncl": 0.00,
+  "products": [
+    {
+      "articleNumber": "article/product code",
+      "ean": "EAN barcode if present, else empty string",
+      "name": "full product name",
+      "quantity": 1,
+      "unitPriceExcl": 0.00,
+      "totalExcl": 0.00
+    }
+  ]
+}
+
+Rules:
+- All prices are numbers (no currency symbols)
+- Extract every product line item visible on the invoice
+- If a field is not visible, use empty string or 0
+- Return ONLY the JSON object`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: file.type, data: base64 } },
+            ],
+          },
+        ],
+      });
+
+      const raw = response.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+      const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+
+      meta = {
+        supplier: parsed.supplier ?? "Onbekende leverancier",
+        invoiceNumber: parsed.invoiceNumber ?? "",
+        invoiceDate: parsed.invoiceDate ?? "",
+        totalExcl: Number(parsed.totalExcl) || 0,
+        totalBtw: Number(parsed.totalBtw) || 0,
+        totalIncl: Number(parsed.totalIncl) || 0,
+        fileHash,
+      };
+      products = (parsed.products ?? []).map((p: Record<string, unknown>) => ({
+        articleNumber: String(p.articleNumber ?? ""),
+        ean: String(p.ean ?? ""),
+        name: String(p.name ?? ""),
+        quantity: Number(p.quantity) || 1,
+        unitPriceExcl: Number(p.unitPriceExcl) || 0,
+        totalExcl: Number(p.totalExcl) || 0,
+      }));
+    } else {
+      // ── PDF: existing text-based parser ──────────────────────────────────
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (buf: Buffer) => Promise<{ text: string }>;
+      const data = await pdfParse(buffer);
+      const text = data.text;
+      const lines = text.split("\n").map((l: string) => l.trim()).filter(Boolean);
+
+      const fullText = lines.join(" ");
+      const invoiceNumberMatch = fullText.match(/Factuur nummer\s+(\d+)/);
+      const invoiceDateMatch = fullText.match(/Factuurdatum\s+([\d\-]+)/);
+      const totalExclMatch = fullText.match(/SubTotaal\s*:\s*€\s*([\d.,]+)/);
+      const totalBtwMatch = fullText.match(/BTW bedrag 21\s*%\s*:\s*€\s*([\d.,]+)/);
+      const totalInclMatch = fullText.match(/Totaal\s*:\s*€\s*([\d.,]+)/);
+      const parseAmount = (s: string) => parseFloat(s.replace(/\./g, "").replace(",", ".")) || 0;
+
+      meta = {
+        supplier: fullText.includes("Dino Trading") ? "Dino Trading bv" : "Onbekende leverancier",
+        invoiceNumber: invoiceNumberMatch?.[1] ?? "",
+        invoiceDate: invoiceDateMatch?.[1] ?? "",
+        totalExcl: totalExclMatch ? parseAmount(totalExclMatch[1]) : 0,
+        totalBtw: totalBtwMatch ? parseAmount(totalBtwMatch[1]) : 0,
+        totalIncl: totalInclMatch ? parseAmount(totalInclMatch[1]) : 0,
+        fileHash,
+      };
+      products = parseProducts(lines);
+    }
+
+    // Duplicate check on invoice number
     if (meta.invoiceNumber) {
       const numberDuplicate = await db.query.invoices.findFirst({
         where: eq(invoices.invoiceNumber, meta.invoiceNumber),
@@ -75,8 +150,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const products = parseProducts(lines);
-
     // Add AI-based category suggestions
     const productsWithSuggestions = products.map((p) => {
       const sug = suggestCategory(p.name);
@@ -85,8 +158,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ meta, products: productsWithSuggestions });
   } catch (err) {
-    console.error("PDF parse error:", err);
-    return NextResponse.json({ error: "PDF kon niet worden gelezen: " + String(err) }, { status: 500 });
+    console.error("Parse error:", err);
+    return NextResponse.json({ error: "Bestand kon niet worden gelezen: " + String(err) }, { status: 500 });
   }
 }
 
